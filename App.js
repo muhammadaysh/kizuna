@@ -6,10 +6,11 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "react-native-vector-icons";
 import { BottomNavigation } from "react-native-paper";
 import { Animated } from "react-native";
-import HomeScreen from "./components/HomeScreen";
-import MonitoringScreen from "./components/MonitoringScreen";
-import WateringScreen from "./components/WateringScreen";
-import DroneScreen from "./components/DroneScreen";
+import HomeScreen from "./screens/HomeScreen";
+import MonitoringScreen from "./screens/MonitoringScreen";
+import WateringScreen from "./screens/WateringScreen";
+import DroneScreen from "./screens/DroneScreen";
+import KText from "./components/KText";
 
 const Tab = createBottomTabNavigator();
 
@@ -26,7 +27,7 @@ export default function App() {
   const startAnimation = (animation) => {
     Animated.timing(animation, {
       toValue: 1,
-      duration: 250,
+      duration: 300,
       useNativeDriver: false,
     }).start();
   };
@@ -77,17 +78,17 @@ export default function App() {
             if (focused) {
               startAnimation(animation);
               return (
-                <View style={{ height: 55, overflow: 'hidden' }}>
+                <View style={{ height: 55, overflow: "hidden" }}>
                   <Animated.View
                     style={[
                       {
                         borderTopLeftRadius: 15,
                         borderTopRightRadius: 15,
-                        padding: 11,
+                        padding: 13,
                         paddingBottom: 9,
                         marginBottom: -3,
                         height: 55,
-                        marginTop:4,
+                        marginTop: 4,
                       },
                       animatedStyles(animation),
                     ]}
@@ -125,7 +126,7 @@ export default function App() {
             borderRadius: 20,
             margin: 10,
             paddingHorizontal: 20,
-            height:55,
+            height: 55,
             position: "absolute",
             bottom: 0,
             elevation: 2,

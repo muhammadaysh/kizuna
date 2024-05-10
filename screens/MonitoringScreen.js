@@ -2,9 +2,10 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, Image } from "react-native";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import KText from "../components/KText";
 
 
-export default function DroneScreen() {
+export default function MonitoringScreen() {
   return (
     <View style={styles.container}>
       <Image
@@ -12,7 +13,7 @@ export default function DroneScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text>Drone Screen</Text>
+      <KText>Monitoring Screen</KText>
       <StatusBar style="auto" />
     </View>
   );

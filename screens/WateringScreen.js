@@ -2,6 +2,7 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, Image } from "react-native";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import KText from "../components/KText";
 
 
 export default function WateringScreen() {
@@ -12,7 +13,7 @@ export default function WateringScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text>Watering Screen</Text>
+      <KText>Watering Screen</KText>
       <StatusBar style="auto" />
     </View>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   StatusBar,
@@ -8,10 +8,13 @@ import {
   Image,
   ScrollView,
   RefreshControl,
+  Animated,
+  TouchableOpacity,
 } from "react-native";
-import getWeatherData from "./Weather"; // Import the getWeatherData function
-import iconMap from "./WeatherIcons";
+import getWeatherData from "../components/Weather"; // Import the getWeatherData function
+import iconMap from "../components/WeatherIcons";
 import { Dimensions } from "react-native";
+import KText from "../components/KText";
 
 const { height } = Dimensions.get("window");
 
@@ -19,6 +22,8 @@ export default function HomeScreen() {
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const rotation = useRef(new Animated.Value(0)).current;
 
   const fetchWeatherData = async () => {
     setError(null);
@@ -42,6 +47,34 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    startPulse();
+  }, []);
+
+  const startPulse = () => {
+    Animated.sequence([
+      Animated.timing(pulseAnim, {
+        toValue: 1.1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start(() => startPulse());
+  };
+
+  const startRotation = () => {
+  Animated.timing(rotation, {
+    toValue: 1,
+    duration: 1000,
+    useNativeDriver: true,
+  }).start(() => {
+    rotation.setValue(0); 
+  });
+};
   useFocusEffect(
     React.useCallback(() => {
       fetchWeatherData();
@@ -49,7 +82,7 @@ export default function HomeScreen() {
   );
 
   if (error) {
-    return <Text>Error: {error.message}</Text>;
+    return <KText>Error: {error.message}</KText>;
   }
 
   if (!weatherData) {
@@ -77,11 +110,29 @@ export default function HomeScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.location}>{weatherData.name}</Text>
-      <Text style={styles.date}>{`${date} ${time}`}</Text>
-      {WeatherIcon}
-      <Text style={styles.temperature}>{`${Math.round(weatherData.main.temp)}°C`}</Text>
-      <Text style={styles.weather}>{weatherData.weather[0].main}</Text>
+      <KText style={styles.location}>Koshi, Kumamoto</KText>
+      <KText style={styles.date}>{`${date} ${time}`}</KText>
+      <Animated.View
+        style={{
+          transform: [
+            { scale: pulseAnim },
+            {
+              rotate: rotation.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0deg', '360deg'],
+              }),
+            },
+          ],
+        }}
+      >
+        <TouchableOpacity onPress={startRotation}>
+          {WeatherIcon}
+        </TouchableOpacity>
+      </Animated.View>
+      <KText style={styles.temperature}>{`${Math.round(
+        weatherData.main.temp
+      )}°C`}</KText>
+      <KText style={styles.weather}>{weatherData.weather[0].main}</KText>
       <StatusBar style="auto" />
     </ScrollView>
   );
@@ -98,6 +149,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 100,
     height: 100,
+    margin:10,
     position: "absolute",
     top: 0,
   },
