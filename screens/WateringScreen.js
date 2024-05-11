@@ -8,11 +8,7 @@ import KText from "../components/KText";
 export default function WateringScreen() {
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../assets/logo.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+      
       <KText>Watering Screen</KText>
       <StatusBar style="auto" />
     </View>

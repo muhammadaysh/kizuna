@@ -8,11 +8,6 @@ import KText from "../components/KText";
 export default function DroneScreen() {
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../assets/logo.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
       <KText>Drone Screen</KText>
       <StatusBar style="auto" />
     </View>

@@ -67,14 +67,14 @@ export default function HomeScreen() {
   };
 
   const startRotation = () => {
-  Animated.timing(rotation, {
-    toValue: 1,
-    duration: 1000,
-    useNativeDriver: true,
-  }).start(() => {
-    rotation.setValue(0); 
-  });
-};
+    Animated.timing(rotation, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start(() => {
+      rotation.setValue(0);
+    });
+  };
   useFocusEffect(
     React.useCallback(() => {
       fetchWeatherData();
@@ -110,30 +110,32 @@ export default function HomeScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <KText style={styles.location}>Koshi, Kumamoto</KText>
-      <KText style={styles.date}>{`${date} ${time}`}</KText>
-      <Animated.View
-        style={{
-          transform: [
-            { scale: pulseAnim },
-            {
-              rotate: rotation.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', '360deg'],
-              }),
-            },
-          ],
-        }}
-      >
-        <TouchableOpacity onPress={startRotation}>
-          {WeatherIcon}
-        </TouchableOpacity>
-      </Animated.View>
-      <KText style={styles.temperature}>{`${Math.round(
-        weatherData.main.temp
-      )}°C`}</KText>
-      <KText style={styles.weather}>{weatherData.weather[0].main}</KText>
-      <StatusBar style="auto" />
+      <View style={{ top:-100 }}>
+        <KText style={styles.location}>Koshi, Kumamoto</KText>
+        <KText style={styles.date}>{`${date} ${time}`}</KText>
+        <Animated.View
+          style={{
+            transform: [
+              { scale: pulseAnim },
+              {
+                rotate: rotation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0deg", "360deg"],
+                }),
+              },
+            ],
+          }}
+        >
+          <TouchableOpacity onPress={startRotation}>
+            {WeatherIcon}
+          </TouchableOpacity>
+        </Animated.View>
+        <KText style={styles.temperature}>{`${Math.round(
+          weatherData.main.temp
+        )}°C`}</KText>
+        <KText style={styles.weather}>{weatherData.weather[0].main}</KText>
+        <StatusBar style="auto" />
+      </View>
     </ScrollView>
   );
 }
@@ -149,9 +151,8 @@ const styles = StyleSheet.create({
   logo: {
     width: 100,
     height: 100,
-    margin:10,
     position: "absolute",
-    top: 0,
+    top: -30,
   },
   location: {
     fontSize: 24,
