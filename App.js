@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler';
+import 'react-native-screens';
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";

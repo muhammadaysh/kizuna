@@ -12,20 +12,33 @@
       "backgroundColor": "#0F110E"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.Kizuna"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.Kizuna"
     },
     "web": {
-      "favicon": "./assets/icon1.png"
+      "favicon": "./assets/icon.png"
     },
     "packagerOpts": {
       "config": "metro.config.js",
-      "sourceExts": ["js", "jsx", "ts", "tsx", "svg"]
+      "sourceExts": [
+        "js",
+        "jsx",
+        "ts",
+        "tsx",
+        "svg"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d18a9119-6385-4b6a-b3e1-885034bc6a42"
+      }
     }
   }
 }
