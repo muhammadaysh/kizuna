@@ -1,5 +1,5 @@
-import 'react-native-gesture-handler';
-import 'react-native-screens';
+import "react-native-gesture-handler";
+import "react-native-screens";
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
@@ -32,18 +32,12 @@ function CustomDrawerItem({ label, onPress, iconName }) {
       onPress={onPress}
       style={{ flexDirection: "row", padding: 10, alignItems: "center" }}
     >
-      <MaterialCommunityIcons
-        name={iconName}
-        size={24}
-        color={"#FFFFFF"}
-        
-      />
+      <MaterialCommunityIcons name={iconName} size={24} color={"#FFFFFF"} />
       <KText
         style={{
           color: "#FFFFFF",
           fontSize: 20,
           marginLeft: 10,
-         
         }}
       >
         {label}
@@ -54,36 +48,32 @@ function CustomDrawerItem({ label, onPress, iconName }) {
 
 function DrawerContent(props) {
   return (
-    
-        <View
-          style={{ marginLeft: 5, marginTop: 30, flex: 1, alignItems: "left" }}
-        >
-          <CustomDrawerItem
-            label="Home"
-            iconName="home"
-            labelStyle={{ color: "#FFFFFF", fontSize: 16 }}
-            onPress={() => props.navigation.navigate("Home")} // Add navigation here
-          />
-          <CustomDrawerItem
-            label="Monitoring"
-            iconName="monitor"
-            labelStyle={{ color: "#FFFFFF" }}
-            onPress={() => props.navigation.navigate("Monitoring")} // Add navigation here
-          />
-          <CustomDrawerItem
-            label="Watering"
-            iconName="watering-can"
-            labelStyle={{ color: "#FFFFFF" }}
-            onPress={() => props.navigation.navigate("Watering")} // Add navigation here
-          />
-          <CustomDrawerItem
-            label="Drone"
-            iconName="drone"
-            labelStyle={{ color: "#FFFFFF" }}
-            onPress={() => props.navigation.navigate("Drone")} // Add navigation here
-          />
-        </View>
-      
+    <View style={{ marginLeft: 5, marginTop: 30, flex: 1, alignItems: "left" }}>
+      <CustomDrawerItem
+        label="Home"
+        iconName="home"
+        labelStyle={{ color: "#FFFFFF", fontSize: 16 }}
+        onPress={() => props.navigation.navigate("Home")} // Add navigation here
+      />
+      <CustomDrawerItem
+        label="Monitoring"
+        iconName="monitor"
+        labelStyle={{ color: "#FFFFFF" }}
+        onPress={() => props.navigation.navigate("Monitoring")} // Add navigation here
+      />
+      <CustomDrawerItem
+        label="Watering"
+        iconName="watering-can"
+        labelStyle={{ color: "#FFFFFF" }}
+        onPress={() => props.navigation.navigate("Watering")} // Add navigation here
+      />
+      <CustomDrawerItem
+        label="Drone"
+        iconName="drone"
+        labelStyle={{ color: "#FFFFFF" }}
+        onPress={() => props.navigation.navigate("Drone")} // Add navigation here
+      />
+    </View>
   );
 }
 
@@ -97,25 +87,29 @@ function TabNavigation() {
   );
   const [droneAnimation, setDroneAnimation] = useState(new Animated.Value(0));
 
-  const startAnimation = (animation) => {
-    Animated.timing(animation, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
+  const startAnimation = (animation, toValue) => {
+    Animated.sequence([
+      Animated.timing(animation, {
+        toValue: toValue + 0.2, 
+        duration: 200,
+        useNativeDriver: false,
+      }),
+      Animated.timing(animation, {
+        toValue,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+    ]).start();
   };
 
   const animatedStyles = (animation) => ({
-    backgroundColor: animation.interpolate({
+    borderRadius: animation.interpolate({
       inputRange: [0, 1],
-      outputRange: ["#FFFFFF", "#4B8E4B"],
+      outputRange: [0, 100],
     }),
     transform: [
       {
-        translateY: animation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [55, 0],
-        }),
+        scale: animation,
       },
     ],
   });
@@ -150,36 +144,35 @@ function TabNavigation() {
           if (focused) {
             startAnimation(animation);
             return (
-              <View style={{ height: 55, overflow: "hidden" }}>
+              <View style={{ alignItems: "center", justifyContent: "center" }}>
                 <Animated.View
                   style={[
                     {
-                      borderTopLeftRadius: 15,
-                      borderTopRightRadius: 15,
-                      padding: 13,
-                      paddingBottom: 9,
-                      marginBottom: -3,
-                      height: 55,
-                      marginTop: 4,
+                      position: "absolute",
+                      width: size * 3, // Adjust this to change the size of the circle
+                      height: size * 2.8, // Adjust this to change the size of the circle
+                      backgroundColor: "#4B8E4B",
+                      alignItems: "center",
+                      justifyContent: "center",
                     },
                     animatedStyles(animation),
                   ]}
-                >
-                  <MaterialCommunityIcons
-                    name={iconName}
-                    size={size}
-                    color="#FFFFFF"
-                  />
-                </Animated.View>
+                />
+                <MaterialCommunityIcons
+                  name={iconName}
+                  size={size}
+                  color="#FFFFFF"
+                />
               </View>
             );
           } else {
+            animation.setValue(0);
+            startAnimation(animation, 0.85);
             return (
               <View
                 style={{
                   padding: 11,
                   paddingBottom: 9,
-                  marginBottom: -3,
                 }}
               >
                 <MaterialCommunityIcons
@@ -303,7 +296,7 @@ export default function App() {
           drawerStyle: {
             borderRadius: 30,
             width: 200,
-            backgroundColor:"#212822"
+            backgroundColor: "#212822",
           },
           headerShadowVisible: false,
         }}
