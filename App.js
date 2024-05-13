@@ -58,36 +58,36 @@ function CustomDrawerItem({ label, onPress, iconName }) {
 
 function DrawerContent(props) {
   return (
-    <LinearGradient colors={["#4E674F", "#304331"]} style={{ flex: 1 }}>
-      <View
-        style={{ marginLeft: 5, marginTop: 10, flex: 1, alignItems: "left" }}
-      >
-        <CustomDrawerItem
-          label="Home"
-          iconName="home"
-          labelStyle={{ color: "#FFFFFF", fontSize: 16 }}
-          onPress={() => props.navigation.navigate("Home")} // Add navigation here
-        />
-        <CustomDrawerItem
-          label="Monitoring"
-          iconName="monitor"
-          labelStyle={{ color: "#FFFFFF" }}
-          onPress={() => props.navigation.navigate("Monitoring")} // Add navigation here
-        />
-        <CustomDrawerItem
-          label="Watering"
-          iconName="watering-can"
-          labelStyle={{ color: "#FFFFFF" }}
-          onPress={() => props.navigation.navigate("Watering")} // Add navigation here
-        />
-        <CustomDrawerItem
-          label="Drone"
-          iconName="drone"
-          labelStyle={{ color: "#FFFFFF" }}
-          onPress={() => props.navigation.navigate("Drone")} // Add navigation here
-        />
-      </View>
-    </LinearGradient>
+    
+        <View
+          style={{ marginLeft: 5, marginTop: 20, flex: 1, alignItems: "left" }}
+        >
+          <CustomDrawerItem
+            label="Home"
+            iconName="home"
+            labelStyle={{ color: "#FFFFFF", fontSize: 16 }}
+            onPress={() => props.navigation.navigate("Home")} // Add navigation here
+          />
+          <CustomDrawerItem
+            label="Monitoring"
+            iconName="monitor"
+            labelStyle={{ color: "#FFFFFF" }}
+            onPress={() => props.navigation.navigate("Monitoring")} // Add navigation here
+          />
+          <CustomDrawerItem
+            label="Watering"
+            iconName="watering-can"
+            labelStyle={{ color: "#FFFFFF" }}
+            onPress={() => props.navigation.navigate("Watering")} // Add navigation here
+          />
+          <CustomDrawerItem
+            label="Drone"
+            iconName="drone"
+            labelStyle={{ color: "#FFFFFF" }}
+            onPress={() => props.navigation.navigate("Drone")} // Add navigation here
+          />
+        </View>
+      
   );
 }
 
@@ -112,7 +112,7 @@ function TabNavigation() {
   const animatedStyles = (animation) => ({
     backgroundColor: animation.interpolate({
       inputRange: [0, 1],
-      outputRange: ["#FFFFFF", "#385442"],
+      outputRange: ["#FFFFFF", "#4B8E4B"],
     }),
     transform: [
       {
@@ -189,7 +189,7 @@ function TabNavigation() {
                 <MaterialCommunityIcons
                   name={iconName}
                   size={size}
-                  color={"#4E674F"}
+                  color={"#FFFFFF"}
                 />
               </View>
             );
@@ -198,7 +198,7 @@ function TabNavigation() {
         tabBarActiveTintColor: "green",
         tabBarInactiveTintColor: "385442",
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "#242424",
           borderRadius: 20,
           margin: 10,
           paddingHorizontal: 20,
@@ -297,7 +297,7 @@ export default function App() {
         screenOptions={{
           headerTitle: "",
           headerStyle: {
-            backgroundColor: "#F4FAF6",
+            backgroundColor: "#0F110E",
           },
           headerLeft: () => <KebabMenu />,
           headerRight: () => <CustomHeader />,
@@ -307,6 +307,7 @@ export default function App() {
           drawerStyle: {
             borderRadius: 30,
             width: 200,
+            backgroundColor:"#212822"
           },
           headerShadowVisible: false,
         }}
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#F4FAF6",
+    backgroundColor: "#2C332E",
     alignItems: "center",
     justifyContent: "center",
   },

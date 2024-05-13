@@ -1,14 +1,18 @@
-import React from 'react';
-import { Text, StyleSheet, Platform } from 'react-native';
+import React from "react";
+import { Text, StyleSheet, Platform } from "react-native";
 
 const styles = StyleSheet.create({
   defaultFontFamily: {
-    fontFamily: Platform.OS === 'ios' ? 'Arial' : 'Roboto',
+    fontFamily: Platform.OS === "ios" ? "Arial" : "Roboto",
   },
 });
 
 const KText = ({ children, style, ...props }) => (
-  <Text style={[styles.defaultFontFamily, style]} {...props}>
+  <Text
+    style={[styles.defaultFontFamily, style, { color: "#FFFFFF" }]}
+    {...props}
+  >
+    {" "}
     {children}
   </Text>
 );

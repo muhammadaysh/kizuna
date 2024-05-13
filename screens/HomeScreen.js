@@ -105,12 +105,8 @@ export default function HomeScreen() {
         <RefreshControl refreshing={isLoading} onRefresh={fetchWeatherData} />
       }
     >
-      <Image
-        source={require("../assets/logo.png")}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-      <View style={{ top:-100 }}>
+    
+      <View style={{ top: -150 }}>
         <KText style={styles.location}>Koshi, Kumamoto</KText>
         <KText style={styles.date}>{`${date} ${time}`}</KText>
         <Animated.View
@@ -144,7 +140,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#F4FAF6",
+    backgroundColor: "#0F110E",
     alignItems: "center",
     justifyContent: "center",
   },
