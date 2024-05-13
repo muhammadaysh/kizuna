@@ -34,20 +34,14 @@ function CustomDrawerItem({ label, onPress, iconName }) {
         name={iconName}
         size={24}
         color={"#FFFFFF"}
-        style={{
-          textShadowColor: "rgba(0, 0, 0, 0.3)",
-          textShadowOffset: { width: -1, height: 1 },
-          textShadowRadius: 10,
-        }}
+        
       />
       <KText
         style={{
           color: "#FFFFFF",
           fontSize: 20,
           marginLeft: 10,
-          textShadowColor: "rgba(0, 0, 0, 0.3)",
-          textShadowOffset: { width: -1, height: 1 },
-          textShadowRadius: 10,
+         
         }}
       >
         {label}
@@ -60,7 +54,7 @@ function DrawerContent(props) {
   return (
     
         <View
-          style={{ marginLeft: 5, marginTop: 20, flex: 1, alignItems: "left" }}
+          style={{ marginLeft: 5, marginTop: 30, flex: 1, alignItems: "left" }}
         >
           <CustomDrawerItem
             label="Home"
