@@ -90,7 +90,7 @@ function TabNavigation() {
   const startAnimation = (animation, toValue) => {
     Animated.sequence([
       Animated.timing(animation, {
-        toValue: toValue + 0.2, 
+        toValue: toValue + 0.2,
         duration: 200,
         useNativeDriver: false,
       }),
@@ -115,114 +115,129 @@ function TabNavigation() {
   });
 
   return (
-    <Tab.Navigator
-      initialRouteName="Home"
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          let animation;
-
-          if (route.name === "Home") {
-            iconName = "home";
-            animation = homeAnimation;
-          } else if (route.name === "Monitoring") {
-            iconName = "monitor";
-            animation = monitoringAnimation;
-          } else if (route.name === "Watering") {
-            iconName = "watering-can";
-            animation = wateringAnimation;
-          } else if (route.name === "Drone") {
-            iconName = "drone";
-            animation = droneAnimation;
-          }
-
-          if (!focused) {
-            animation.setValue(0);
-            startAnimation(animation);
-          }
-
-          if (focused) {
-            startAnimation(animation);
-            return (
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <Animated.View
-                  style={[
-                    {
-                      position: "absolute",
-                      width: size * 3, // Adjust this to change the size of the circle
-                      height: size * 2.8, // Adjust this to change the size of the circle
-                      backgroundColor: "#4B8E4B",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
-                    animatedStyles(animation),
-                  ]}
-                />
-                <MaterialCommunityIcons
-                  name={iconName}
-                  size={size}
-                  color="#FFFFFF"
-                />
-              </View>
-            );
-          } else {
-            animation.setValue(0);
-            startAnimation(animation, 0.85);
-            return (
-              <View
-                style={{
-                  padding: 11,
-                  paddingBottom: 9,
-                }}
-              >
-                <MaterialCommunityIcons
-                  name={iconName}
-                  size={size}
-                  color={"#FFFFFF"}
-                />
-              </View>
-            );
-          }
-        },
-        tabBarActiveTintColor: "green",
-        tabBarInactiveTintColor: "385442",
-        tabBarStyle: {
-          backgroundColor: "#242424",
-          borderRadius: 20,
-          margin: 10,
-          paddingHorizontal: 20,
-          height: 55,
+    <View style={{ flex: 1, backgroundColor: "#0F110E" }}>
+      <View
+        style={{
           position: "absolute",
           bottom: 0,
-          elevation: 2,
-          borderTopWidth: 0,
-        },
-        tabBarLabelStyle: {
-          display: "none",
-        },
-      })}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ headerShown: false }}
+          height: 80,
+          width: "100%",
+          backgroundColor: "#0F110E",
+          zIndex: 1,
+        }}
       />
-      <Tab.Screen
-        name="Monitoring"
-        component={MonitoringScreen}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen
-        name="Watering"
-        component={WateringScreen}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen
-        name="Drone"
-        component={DroneScreen}
-        options={{ headerShown: false }}
-      />
-    </Tab.Navigator>
+      <Tab.Navigator
+        initialRouteName="Home"
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            let animation;
+
+            if (route.name === "Home") {
+              iconName = "home";
+              animation = homeAnimation;
+            } else if (route.name === "Monitoring") {
+              iconName = "monitor";
+              animation = monitoringAnimation;
+            } else if (route.name === "Watering") {
+              iconName = "watering-can";
+              animation = wateringAnimation;
+            } else if (route.name === "Drone") {
+              iconName = "drone";
+              animation = droneAnimation;
+            }
+
+            if (!focused) {
+              animation.setValue(0);
+              startAnimation(animation);
+            }
+
+            if (focused) {
+              startAnimation(animation);
+              return (
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <Animated.View
+                    style={[
+                      {
+                        position: "absolute",
+                        width: size * 3, // Adjust this to change the size of the circle
+                        height: size * 2.8, // Adjust this to change the size of the circle
+                        backgroundColor: "#4B8E4B",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      },
+                      animatedStyles(animation),
+                    ]}
+                  />
+                  <MaterialCommunityIcons
+                    name={iconName}
+                    size={size}
+                    color="#FFFFFF"
+                  />
+                </View>
+              );
+            } else {
+              animation.setValue(0);
+              startAnimation(animation, 0.85);
+              return (
+                <View
+                  style={{
+                    padding: 11,
+                    paddingBottom: 9,
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name={iconName}
+                    size={size}
+                    color={"#FFFFFF"}
+                  />
+                </View>
+              );
+            }
+          },
+          tabBarActiveTintColor: "green",
+          tabBarInactiveTintColor: "385442",
+          tabBarStyle: {
+            backgroundColor: "#242424",
+            borderRadius: 20,
+            margin: 10,
+            paddingHorizontal: 20,
+            height: 55,
+            position: "absolute",
+            bottom: 0,
+            elevation: 2,
+            borderTopWidth: 0,
+            zIndex: 2,
+          },
+          tabBarLabelStyle: {
+            display: "none",
+          },
+        })}
+      >
+        <Tab.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Monitoring"
+          component={MonitoringScreen}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Watering"
+          component={WateringScreen}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Drone"
+          component={DroneScreen}
+          options={{ headerShown: false }}
+        />
+      </Tab.Navigator>
+    </View>
   );
 }
 

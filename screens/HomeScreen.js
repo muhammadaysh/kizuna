@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Animated,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import getWeatherData from "../components/Weather"; // Import the getWeatherData function
 import iconMap from "../components/WeatherIcons";
@@ -40,13 +41,13 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchWeatherData();
-    const interval = setInterval(() => {
-      fetchWeatherData();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  // useEffect(() => {
+  //   fetchWeatherData();
+  //   const interval = setInterval(() => {
+  //     fetchWeatherData();
+  //   }, 30000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   useEffect(() => {
     startPulse();
@@ -78,9 +79,17 @@ export default function HomeScreen() {
   };
   useFocusEffect(
     React.useCallback(() => {
-      fetchWeatherData();
+      // fetchWeatherData();
     }, [])
   );
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#4B8E4B" />
+      </View>
+    );
+  }
 
   if (error) {
     return <KText>Error: {error.message}</KText>;
@@ -124,6 +133,7 @@ export default function HomeScreen() {
         >
           <TouchableOpacity onPress={startRotation}>
             {WeatherIcon}
+            
           </TouchableOpacity>
         </Animated.View>
         <KText style={styles.temperature}>{`${Math.round(
@@ -197,12 +207,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   date: {
-    marginBottom:-20,
+    marginBottom: -15,
     fontSize: 18,
     textAlign: "center",
   },
   temperature: {
-    marginTop:-20,
+    marginTop: -15,
     fontSize: 48,
     fontWeight: "bold",
     textAlign: "center",
