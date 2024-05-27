@@ -31,6 +31,8 @@ import {
 } from "../components/StreamingContext";
 import { SocketContext, SocketProvider } from "../components/SocketContext";
 import { AntDesign } from "@expo/vector-icons";
+import {FFmpegKit, FFmpegKitConfig, ReturnCode} from 'ffmpeg-kit-react-native';
+
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -120,6 +122,7 @@ export default function DroneScreen({ navigation, route }) {
         server.current.removeListener("message", messageListener);
       }
     };
+    
 
     server.current.on("message", messageListener);
 
@@ -218,7 +221,7 @@ export default function DroneScreen({ navigation, route }) {
             isLive={true}
             autoReloadLive={true}
             initOptions={[
-              "--network-caching=150",
+              "--network-caching=1000",
               "--demux=h264",
             ]}
             onError={(e) => {
