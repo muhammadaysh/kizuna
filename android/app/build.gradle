@@ -86,7 +86,7 @@ android {
     namespace 'com.anonymous.Kizuna'
     defaultConfig {
         applicationId 'com.anonymous.Kizuna'
-        minSdkVersion rootProject.ext.minSdkVersion
+        minSdkVersion 24
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"

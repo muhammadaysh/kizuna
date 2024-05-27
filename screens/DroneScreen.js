@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  createContext,
+  useContext,
+} from "react";
 import {
   Button,
   StyleSheet,
@@ -9,26 +15,34 @@ import {
   ScrollView,
   Animated,
   ActivityIndicator,
+  ToastAndroid,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import dgram from "react-native-udp";
 import KText from "../components/KText";
 import { VLCPlayer } from "react-native-vlc-media-player";
+import Video from "react-native-video";
 import _ from "lodash";
 import Icon from "react-native-vector-icons/FontAwesome5";
+import Orientation from "react-native-orientation-locker";
+import {
+  StreamingContext,
+  StreamingProvider,
+} from "../components/StreamingContext";
+import { SocketContext, SocketProvider } from "../components/SocketContext";
+import { AntDesign } from "@expo/vector-icons";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function DroneScreen() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
+export default function DroneScreen({ navigation, route }) {
+  const { isStreaming, connectAndStartStreaming } =
+    useContext(StreamingContext);
+  const { client, server, videoServer } = useContext(SocketContext);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialScreen, setIsInitialScreen] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [moveInterval, setMoveInterval] = useState(null);
 
-  const clientRef = useRef(null);
-  const serverRef = useRef(null);
-  const videoServerRef = useRef(null);
   const playerRef = useRef(null);
 
   useFocusEffect(
@@ -44,54 +58,16 @@ export default function DroneScreen() {
   );
 
   useEffect(() => {
-    clientRef.current = dgram.createSocket("udp4");
-    serverRef.current = dgram.createSocket("udp4");
-    videoServerRef.current = dgram.createSocket("udp4");
-
-    try {
-      clientRef.current.bind(8889);
-      serverRef.current.bind(8890);
-      videoServerRef.current.bind(11111);
-    } catch (err) {
-      console.error("Failed to bind socket", err);
-      return;
+    if (isStreaming) {
+      Orientation.lockToLandscape();
+    } else {
+      Orientation.lockToPortrait();
     }
+  }, [isStreaming]);
 
-    let timeoutId = null;
-    let intervalId = null;
-
-    let state = null;
-    let rinfo = null;
-
-    serverRef.current.on("message", (msg, rinfo) => {
-      state = parseState(msg.toString());
-      rinfo = rinfo;
-      setIsConnected(true);
-    });
-
-    intervalId = setInterval(() => {
-      if (state && rinfo) {
-        console.log(`server got: ${state} from ${rinfo.address}:${rinfo.port}`);
-      }
-    }, 15000);
-
-    videoServerRef.current.on("message", (msg, rinfo) => {
-      setIsStreaming(true);
-    });
-
-    timeoutId = setTimeout(() => {
-      setIsConnected(false);
-    }, 5000);
-
-    return () => {
-      clientRef.current.close();
-      serverRef.current.close();
-      videoServerRef.current.close();
-
-      clearTimeout(timeoutId);
-      clearInterval(intervalId);
-    };
-  }, []);
+  useEffect(() => {
+    console.log("isStreaming changed:", isStreaming);
+  }, [isStreaming]);
 
   function parseState(state) {
     return state
@@ -104,92 +80,158 @@ export default function DroneScreen() {
   }
 
   const sendCommand = (command) => {
-    clientRef.current.send(
-      command,
-      0,
-      command.length,
-      8889,
-      "192.168.10.1",
-      (err) => {
-        if (err) {
-          console.error("Failed to send command", err);
-          setIsConnected(false);
-        } else {
-          console.log("Command sent: " + command);
+    if (!command) {
+      console.error("Command is undefined");
+      return;
+    } else {
+      client.current.send(
+        command,
+        0,
+        command.length,
+        8889,
+        "192.168.10.1",
+        (err) => {
+          if (err) {
+            console.error("Failed to send command", err);
+            setIsConnected(false);
+          } else {
+            console.log("Command sent: " + command);
+          }
         }
-      }
-    );
+      );
+    }
   };
 
-  const connectAndStartStreaming = () => {
+  const handleConnectAndStartStreaming = () => {
     setIsLoading(true);
     sendCommand("command");
+
+    let receivedResponse = false;
+
+    const messageListener = (msg, rinfo) => {
+      console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+
+      if (msg) {
+        receivedResponse = true;
+        sendCommand("streamon");
+        setIsLoading(false);
+        connectAndStartStreaming();
+
+        server.current.removeListener("message", messageListener);
+      }
+    };
+
+    server.current.on("message", messageListener);
+
     setTimeout(() => {
-      sendCommand("streamon");
-      setIsInitialScreen(false);
-      setIsLoading(false);
+      if (!receivedResponse) {
+        setIsLoading(false);
+        ToastAndroid.show(
+          "No response from drone. Please check if drone is connected via wifi.",
+          ToastAndroid.LONG
+        );
+      }
     }, 5000);
+  };
+
+  const startMoving = (dpad, direction) => {
+    let command;
+    if (dpad === "left") {
+      command = `${direction} 50`;
+    } else {
+      if (direction === "up") {
+        command = "up 40";
+      } else if (direction === "down") {
+        command = "down 40";
+      } else if (direction === "left") {
+        command = "ccw 40";
+      } else if (direction === "right") {
+        command = "cw 40";
+      }
+    }
+
+    const interval = setInterval(() => {
+      sendCommand(command);
+    }, 1000);
+    setMoveInterval(interval);
+  };
+
+  const stopMoving = () => {
+    clearInterval(moveInterval);
+    setMoveInterval(null);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {isInitialScreen || !isConnected ? (
-        <View style={styles.innerContainer}>
-          <Animated.Image
-            source={require("../assets/tello-img.png")}
-            style={{
-              width: screenWidth * 1.3,
-              resizeMode: "contain",
-              position: "absolute",
-              opacity: fadeAnim,
-            }}
-          />
-          <View style={styles.greyContainer}>
-            <TouchableOpacity
-              style={[
-                styles.connectButton,
-                { bottom: 120, flexDirection: "row" },
-              ]}
-              onPress={connectAndStartStreaming}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <Icon name="link" size={20} color="#fff" />
-                  <KText style={styles.connectButtonText}>Connect</KText>
-                </>
-              )}
-            </TouchableOpacity>
+      {!isStreaming ? (
+        <>
+          {console.log("StreamingContext values in DroneScreen:", {
+            isStreaming,
+            connectAndStartStreaming,
+          })}
+          <View style={styles.innerContainer}>
+            <Animated.Image
+              source={require("../assets/tello-img.png")}
+              style={{
+                width: screenWidth * 1.3,
+                resizeMode: "contain",
+                position: "absolute",
+                opacity: fadeAnim,
+              }}
+            />
+            <View style={styles.greyContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.connectButton,
+                  { bottom: 120, flexDirection: "row" },
+                ]}
+                onPress={handleConnectAndStartStreaming}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <KText style={styles.connectButtonText}>Connecting..</KText>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="link" size={20} color="#fff" />
+                    <KText style={styles.connectButtonText}>Connect</KText>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </>
       ) : (
         <>
-          {isStreaming &&
-            (console.log("isStreaming:", isStreaming),
-            (
-              <VLCPlayer
-                style={{ width: "100%", height: "100%" }}
-                source={{ uri: "udp://@0.0.0.0:11111" }}
-                autoplay={true}
-                isLive={true}
-                autoReloadLive={true}
-                initOptions={["--network-caching=150", "--rtsp-tcp"]}
-                onError={(e) => {
-                  console.log("onError", e);
-                  setIsConnected(false);
-                  setIsStreaming(false);
-                }}
-                onOpen={(e) => console.log('onOpen', e)}
-                onBuffering={(e) => console.log('onBuffering', e)}
-                onPlaying={(e) => console.log('onPlaying', e)}
-                onStopped={(e) => console.log('onStopped', e)}
-                onEndReached={(e) => console.log('onEndReached', e)}
-                ref={playerRef}
-              />
-            ))}
-          <View style={styles.innerContainer}>
+          <VLCPlayer
+            style={{
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              zIndex: 0,
+            }}
+            source={{ uri: "udp://@:11111" }}
+            autoplay={true}
+            isLive={true}
+            autoReloadLive={true}
+            initOptions={[
+              "--network-caching=150",
+              "--demux=h264",
+            ]}
+            onError={(e) => {
+              console.log("onError", e);
+            }}
+            onOpen={(e) => console.log("onOpen", e)}
+            onBuffering={(e) => console.log("onBuffering", e)}
+            onPlaying={(e) => console.log("onPlaying", e)}
+            onStopped={(e) => console.log("onStopped", e)}
+            onEndReached={(e) => console.log("onEndReached", e)}
+            ref={playerRef}
+          />
+          {/* <View style={styles.buttonGroup}>
             <TouchableOpacity
               style={styles.buttonContainer}
               onPress={() => sendCommand("takeoff")}
@@ -197,18 +239,84 @@ export default function DroneScreen() {
               <KText style={styles.buttonText}>Take Off</KText>
             </TouchableOpacity>
             <TouchableOpacity
+              style={styles.emergencyContainer}
+              onPress={() => sendCommand("emergency")}
+            >
+              <KText style={styles.buttonText}>! !</KText>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.buttonContainer}
               onPress={() => sendCommand("land")}
             >
               <KText style={styles.buttonText}>Land</KText>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.buttonContainer}
-              onPress={() => sendCommand("streamoff")}
-            >
-              <KText style={styles.buttonText}>Off Stream</KText>
-            </TouchableOpacity>
           </View>
+          <View style={styles.dpadGroup}>
+            <View style={styles.dpad}>
+              <TouchableOpacity
+                style={styles.dpadButton}
+                onPressIn={() => startMoving("left", "forward")}
+                onPressOut={stopMoving}
+              >
+                <AntDesign name="arrowup" size={24} color="white" />
+              </TouchableOpacity>
+              <View style={styles.dpadRow}>
+                <TouchableOpacity
+                  style={styles.dpadButton}
+                  onPressIn={() => startMoving("left", "left")}
+                  onPressOut={stopMoving}
+                >
+                  <AntDesign name="arrowleft" size={24} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.dpadButton}
+                  onPressIn={() => startMoving("left", "right")}
+                  onPressOut={stopMoving}
+                >
+                  <AntDesign name="arrowright" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.dpadButton}
+                onPressIn={() => startMoving("left", "back")}
+                onPressOut={stopMoving}
+              >
+                <AntDesign name="arrowdown" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.dpad}>
+              <TouchableOpacity
+                style={styles.dpadButton}
+                onPressIn={() => startMoving("right", "up")}
+                onPressOut={stopMoving}
+              >
+                <AntDesign name="arrowup" size={24} color="white" />
+              </TouchableOpacity>
+              <View style={styles.dpadRow}>
+                <TouchableOpacity
+                  style={styles.dpadButton}
+                  onPressIn={() => startMoving("right", "left")}
+                  onPressOut={stopMoving}
+                >
+                  <AntDesign name="arrowleft" size={24} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.dpadButton}
+                  onPressIn={() => startMoving("right", "right")}
+                  onPressOut={stopMoving}
+                >
+                  <AntDesign name="arrowright" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.dpadButton}
+                onPressIn={() => startMoving("right", "down")}
+                onPressOut={stopMoving}
+              >
+                <AntDesign name="arrowdown" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View> */}
         </>
       )}
     </ScrollView>
@@ -231,6 +339,15 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 30,
     backgroundColor: "#4B8E4B",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: 10,
+  },
+  emergencyContainer: {
+    width: 70,
+    height: 50,
+    borderRadius: 30,
+    backgroundColor: "#bf0615",
     justifyContent: "center",
     alignItems: "center",
     margin: 10,
@@ -271,5 +388,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-around",
     zIndex: -1,
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  dpadGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 0,
+    marginTop: 20,
+  },
+  dpad: {
+    alignItems: "center",
+    width: screenWidth / 2,
+  },
+  dpadRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "60%",
+  },
+  dpadButton: {
+    backgroundColor: "#4B8E4B",
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    margin: 10,
   },
 });
