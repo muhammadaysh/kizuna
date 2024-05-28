@@ -7,7 +7,7 @@ buildscript {
         compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '34')
         targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
         kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.23'
-        ffmpegKitPackage = "com.arthenica:ffmpeg-kit-full-gpl:6.0.2"
+        ffmpegKitPackage = "full-gpl"
         ndkVersion = "26.1.10909125"
     }
     repositories {
