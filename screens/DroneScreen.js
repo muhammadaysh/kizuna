@@ -31,15 +31,14 @@ import {
 } from "../components/StreamingContext";
 import { SocketContext, SocketProvider } from "../components/SocketContext";
 import { AntDesign } from "@expo/vector-icons";
-import {FFmpegKit, FFmpegKitConfig, ReturnCode} from 'ffmpeg-kit-react-native';
-
+import { FFmpegKit, FFmpegKitConfig, ReturnCode } from 'ffmpeg-kit-react-native';
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function DroneScreen({ navigation, route }) {
   const { isStreaming, connectAndStartStreaming } =
     useContext(StreamingContext);
-  const { client, server, videoServer } = useContext(SocketContext);
+  const { client, server, videoServer, encodedStream } = useContext(SocketContext);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialScreen, setIsInitialScreen] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -104,28 +103,48 @@ export default function DroneScreen({ navigation, route }) {
     }
   };
 
+  const startFFmpegStream = () => {
+    const ffmpegCommand = `-loglevel debug -i udp://0.0.0.0:11111 -c:v libx264 -r 30 -s 960x720 -f mpegts udp://0.0.0.0:49152`;
+  
+    // Delay before starting FFmpeg stream
+    setTimeout(() => {
+      FFmpegKit.execute(ffmpegCommand).then(async (session) => {
+        const returnCode = await session.getReturnCode();
+  
+        if (ReturnCode.isSuccess(returnCode)) {
+          console.log("FFmpeg process completed successfully");
+        } else if (ReturnCode.isCancel(returnCode)) {
+          console.log("FFmpeg process was cancelled");
+        } else {
+          console.log("FFmpeg process failed with returnCode:", returnCode);
+        }
+      });
+    }, 5000); 
+  };
+  
   const handleConnectAndStartStreaming = () => {
     setIsLoading(true);
     sendCommand("command");
-
+  
     let receivedResponse = false;
-
+  
     const messageListener = (msg, rinfo) => {
       console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-
+  
       if (msg) {
         receivedResponse = true;
         sendCommand("streamon");
         setIsLoading(false);
         connectAndStartStreaming();
-
+        startFFmpegStream(); // Start the FFmpeg stream
+  
         server.current.removeListener("message", messageListener);
       }
     };
-    
-
+  
     server.current.on("message", messageListener);
-
+  
+    // Delay before checking for response from drone
     setTimeout(() => {
       if (!receivedResponse) {
         setIsLoading(false);
@@ -134,9 +153,9 @@ export default function DroneScreen({ navigation, route }) {
           ToastAndroid.LONG
         );
       }
-    }, 5000);
+    }, 5000); 
   };
-
+  
   const startMoving = (dpad, direction) => {
     let command;
     if (dpad === "left") {
@@ -216,13 +235,12 @@ export default function DroneScreen({ navigation, route }) {
               right: 0,
               zIndex: 0,
             }}
-            source={{ uri: "udp://@:11111" }}
+            source={{ uri: "udp://@:49152" }}
             autoplay={true}
             isLive={true}
             autoReloadLive={true}
             initOptions={[
               "--network-caching=1000",
-              "--demux=h264",
             ]}
             onError={(e) => {
               console.log("onError", e);
@@ -372,32 +390,20 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 18,
+    fontWeight: "bold",
   },
-
   innerContainer: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    top: -200,
   },
   greyContainer: {
     position: "absolute",
-    backgroundColor: "#242424",
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    padding: 10,
-    top: 139,
-    height: 400,
-    width: "100%",
+    width: screenWidth,
+    height: "100%",
+    backgroundColor: "#0F110E",
     alignItems: "center",
-    justifyContent: "space-around",
-    zIndex: -1,
-  },
-  buttonGroup: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 20,
-    marginTop: 20,
+    justifyContent: "center",
   },
   dpadGroup: {
     flexDirection: "row",
@@ -422,6 +428,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    margin: 10,
-  },
+    margin: 10,}
 });
+
