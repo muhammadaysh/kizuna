@@ -29,6 +29,8 @@ import { SocketContext, SocketProvider } from "./components/SocketContext";
 import DrawerContent from "./components/DrawerContent";
 import TabNavigation from "./components/TabNavigation";
 import Orientation from "react-native-orientation-locker";
+import * as MediaLibrary from 'expo-media-library';
+
 
 const Drawer = createDrawerNavigator();
 

@@ -16,11 +16,13 @@ import {
   Animated,
   ActivityIndicator,
   ToastAndroid,
+  requireNativeComponent,
+  NativeModules
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import dgram from "react-native-udp";
 import KText from "../components/KText";
-import { VLCPlayer } from "react-native-vlc-media-player";
+import { VLCPlayer, VlCPlayerView } from "react-native-vlc-media-player";
 import Video from "react-native-video";
 import _ from "lodash";
 import Icon from "react-native-vector-icons/FontAwesome5";
@@ -31,18 +33,32 @@ import {
 } from "../components/StreamingContext";
 import { SocketContext, SocketProvider } from "../components/SocketContext";
 import { AntDesign } from "@expo/vector-icons";
-import { FFmpegKit, FFmpegKitConfig, ReturnCode } from 'ffmpeg-kit-react-native';
+import {
+  FFmpegKit,
+  FFmpegKitConfig,
+  ReturnCode,
+} from "ffmpeg-kit-react-native";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
+const StreamView = requireNativeComponent('StreamView');
+const { TelloStreamModule } = NativeModules;
+
+
 
 const screenWidth = Dimensions.get("window").width;
+const appDirectory = FileSystem.cacheDirectory;
+const outputPath = FileSystem.cacheDirectory + "output.mp4";
 
 export default function DroneScreen({ navigation, route }) {
   const { isStreaming, connectAndStartStreaming } =
     useContext(StreamingContext);
-  const { client, server, videoServer, encodedStream } = useContext(SocketContext);
+  const { client, server, videoServer, encodedStream } =
+    useContext(SocketContext);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialScreen, setIsInitialScreen] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [moveInterval, setMoveInterval] = useState(null);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   const playerRef = useRef(null);
 
@@ -63,12 +79,21 @@ export default function DroneScreen({ navigation, route }) {
       Orientation.lockToLandscape();
     } else {
       Orientation.lockToPortrait();
+      TelloStreamModule.stopStream();
     }
   }, [isStreaming]);
 
   useEffect(() => {
     console.log("isStreaming changed:", isStreaming);
   }, [isStreaming]);
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      setShowPlayer(true);
+    }, 10000);
+
+    return () => clearTimeout(delay);
+  }, []);
 
   function parseState(state) {
     return state
@@ -103,47 +128,49 @@ export default function DroneScreen({ navigation, route }) {
     }
   };
 
-  const startFFmpegStream = () => {
-    const ffmpegCommand = `-loglevel debug -i udp://0.0.0.0:11111 -c:v libx264 -r 30 -s 960x720 -f mpegts udp://0.0.0.0:49152`;
-  
-    // Delay before starting FFmpeg stream
-    setTimeout(() => {
-      FFmpegKit.execute(ffmpegCommand).then(async (session) => {
-        const returnCode = await session.getReturnCode();
-  
-        if (ReturnCode.isSuccess(returnCode)) {
-          console.log("FFmpeg process completed successfully");
-        } else if (ReturnCode.isCancel(returnCode)) {
-          console.log("FFmpeg process was cancelled");
-        } else {
-          console.log("FFmpeg process failed with returnCode:", returnCode);
-        }
-      });
-    }, 5000); 
-  };
-  
+  // const startFFmpegStream = () => {
+  //   const ffmpegCommand = `-loglevel debug -i udp://0.0.0.0:11111 -c:v mpeg4 -r 20 -s 960x720 -f mpegts udp://127.0.0.1:49152`;
+
+  //   setTimeout(() => {
+  //     FFmpegKit.execute(ffmpegCommand).then(async (session) => {
+  //       const returnCode = await session.getReturnCode();
+
+  //       if (ReturnCode.isSuccess(returnCode)) {
+  //         console.log("FFmpeg process completed successfully");
+  //       } else if (ReturnCode.isCancel(returnCode)) {
+  //         console.log("FFmpeg process was cancelled");
+  //       } else {
+  //         console.log("FFmpeg process failed with returnCode:", returnCode);
+  //       }
+  //     });
+  //   }, 2000);
+  // };
+
   const handleConnectAndStartStreaming = () => {
     setIsLoading(true);
     sendCommand("command");
-  
+
     let receivedResponse = false;
-  
+
     const messageListener = (msg, rinfo) => {
       console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-  
+
       if (msg) {
         receivedResponse = true;
+        sendCommand("speed 30");
         sendCommand("streamon");
         setIsLoading(false);
         connectAndStartStreaming();
-        startFFmpegStream(); // Start the FFmpeg stream
-  
+        TelloStreamModule.startStream();
+        // startFFmpegStream();
+        
+
         server.current.removeListener("message", messageListener);
       }
     };
-  
+
     server.current.on("message", messageListener);
-  
+
     // Delay before checking for response from drone
     setTimeout(() => {
       if (!receivedResponse) {
@@ -153,13 +180,13 @@ export default function DroneScreen({ navigation, route }) {
           ToastAndroid.LONG
         );
       }
-    }, 5000); 
+    }, 5000);
   };
-  
+
   const startMoving = (dpad, direction) => {
     let command;
     if (dpad === "left") {
-      command = `${direction} 50`;
+      command = `${direction} 80`;
     } else {
       if (direction === "up") {
         command = "up 40";
@@ -213,7 +240,6 @@ export default function DroneScreen({ navigation, route }) {
                 {isLoading ? (
                   <>
                     <ActivityIndicator size="small" color="#fff" />
-                    <KText style={styles.connectButtonText}>Connecting..</KText>
                   </>
                 ) : (
                   <>
@@ -227,32 +253,7 @@ export default function DroneScreen({ navigation, route }) {
         </>
       ) : (
         <>
-          <VLCPlayer
-            style={{
-              top: 0,
-              left: 0,
-              bottom: 0,
-              right: 0,
-              zIndex: 0,
-            }}
-            source={{ uri: "udp://@:49152" }}
-            autoplay={true}
-            isLive={true}
-            autoReloadLive={true}
-            initOptions={[
-              "--network-caching=1000",
-            ]}
-            onError={(e) => {
-              console.log("onError", e);
-            }}
-            onOpen={(e) => console.log("onOpen", e)}
-            onBuffering={(e) => console.log("onBuffering", e)}
-            onPlaying={(e) => console.log("onPlaying", e)}
-            onStopped={(e) => console.log("onStopped", e)}
-            onEndReached={(e) => console.log("onEndReached", e)}
-            ref={playerRef}
-          />
-          {/* <View style={styles.buttonGroup}>
+          <View style={styles.buttonGroup}>
             <TouchableOpacity
               style={styles.buttonContainer}
               onPress={() => sendCommand("takeoff")}
@@ -337,7 +338,13 @@ export default function DroneScreen({ navigation, route }) {
                 <AntDesign name="arrowdown" size={24} color="white" />
               </TouchableOpacity>
             </View>
-          </View> */}
+          </View>
+          {showPlayer && (
+            <View style={styles.videoContainer}>
+              <StreamView style={{ width: 300, height: 300 }} />
+              
+            </View>
+          )}
         </>
       )}
     </ScrollView>
@@ -354,6 +361,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F110E",
     alignItems: "center",
     justifyContent: "center",
+  },
+  videoContainer: {
+    flex: 1,
+    width: screenWidth * 0.9,
+    margin: 30,
+    borderWidth: 1,
+    borderColor: "green",
+    height: 300,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    zIndex: -1,
   },
   buttonContainer: {
     width: 200,
@@ -405,10 +424,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  buttonGroup: {
+    flexDirection: "row",
+    width: screenWidth,
+    alignContent: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 0,
+    marginTop: 20,
+  },
   dpadGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "100%",
+    width: screenWidth,
     paddingHorizontal: 0,
     marginTop: 20,
   },
@@ -428,6 +455,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    margin: 10,}
+    margin: 10,
+  },
 });
-
