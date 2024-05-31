@@ -4,6 +4,7 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.bridge.ReactApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
+import com.anonymous.Kizuna.TelloStreamModule;
 
 public class TelloStreamPackage implements ReactPackage {
     @Override

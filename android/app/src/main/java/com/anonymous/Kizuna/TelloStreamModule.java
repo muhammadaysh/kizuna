@@ -6,6 +6,8 @@ import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.uimanager.ViewManager;
 import java.util.ArrayList;
 import java.util.List;
+import com.anonymous.Kizuna.UDPReceiver;
+import com.anonymous.Kizuna.H264Decoder;
 
 public class TelloStreamModule extends ReactContextBaseJavaModule {
     private UDPReceiver receiver;
@@ -43,20 +45,5 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
         isStreaming = false;
         decoder.release();
         receiver.close();
-    }
-}
-public class TelloStreamPackage implements ReactPackage {
-    @Override
-    public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-        List<NativeModule> modules = new ArrayList<>();
-        modules.add(new TelloStreamModule(reactContext));
-        return modules;
-    }
-
-    @Override
-    public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
-        List<ViewManager> managers = new ArrayList<>();
-        managers.add(new StreamViewManager());
-        return managers;
     }
 }
