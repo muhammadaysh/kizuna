@@ -1,21 +1,22 @@
 package com.anonymous.Kizuna;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.view.SurfaceHolder;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
 public class H264Decoder {
     private MediaCodec codec;
-    private Surface surface;
+    private SurfaceHolder surfaceHolder;
 
-     public H264Decoder(Surface surface) {
-        this.surface = surface;
+    public H264Decoder(SurfaceHolder surfaceHolder) {
+        this.surfaceHolder = surfaceHolder;
     }
 
     public void init() throws IOException {
         codec = MediaCodec.createDecoderByType("video/avc");
         MediaFormat format = MediaFormat.createVideoFormat("video/avc", 1280, 720);
-        codec.configure(format, null, null, 0);
+        codec.configure(format, surfaceHolder.getSurface(), null, 0);
         codec.start();
     }
 

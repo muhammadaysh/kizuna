@@ -2,6 +2,8 @@ package com.anonymous.Kizuna;
 import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.anonymous.Kizuna.H264Decoder;
+import android.view.SurfaceView;
+import android.view.Surface;
 
 public class StreamingView extends SimpleViewManager<SurfaceView> {
     public static final String REACT_CLASS = "StreamView";
