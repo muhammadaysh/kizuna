@@ -2,7 +2,7 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -94,7 +94,7 @@ android {
         versionName "1.0.0"
     }
     sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
+        main.java.srcDirs += 'src/main/java'
     }
     signingConfigs {
         debug {
@@ -103,6 +103,9 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+    }
+    buildFeatures {
+        viewBinding true 
     }
     buildTypes {
         debug {
