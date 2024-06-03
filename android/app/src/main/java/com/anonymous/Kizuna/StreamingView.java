@@ -1,3 +1,4 @@
+package com.anonymous.Kizuna
 import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.anonymous.Kizuna.H264Decoder;
