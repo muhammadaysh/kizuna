@@ -1,4 +1,4 @@
-package com.anonymous.Kizuna
+package com.anonymous.Kizuna;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;
