@@ -24,7 +24,7 @@ class MainApplication : Application(), ReactApplication {
           override fun getPackages(): List<ReactPackage> {
             val packages = PackageList(this).packages
             // Add additional packages you need.
-            packages.add(new TelloStreamPackage())
+            packages.add(TelloStreamPackage())
             return packages
         }
 
