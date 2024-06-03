@@ -19,12 +19,10 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
 
-
     public TelloStreamModule(ReactApplicationContext reactContext) {
         super(reactContext);
         surfaceView = new SurfaceView(reactContext);
         surfaceHolder = surfaceView.getHolder();
-    }
     }
 
     @Override
@@ -56,4 +54,3 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
         receiver.close();
     }
 }
-
