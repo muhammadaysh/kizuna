@@ -12,7 +12,7 @@ import com.anonymous.Kizuna.H264Decoder;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
 
-public class TelloStreamModule extends ReactContextBaseJavaModule {
+public class TelloStreamModule extends ReactContextBaseJavaModule implements SurfaceHolder.Callback {
     private UDPReceiver receiver;
     private H264Decoder decoder;
     private volatile boolean isStreaming = false;
@@ -21,8 +21,14 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
 
     public TelloStreamModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        surfaceView = new SurfaceView(reactContext);
-        surfaceHolder = surfaceView.getHolder();
+        reactContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                surfaceView = new SurfaceView(reactContext);
+                surfaceHolder = surfaceView.getHolder();
+                surfaceHolder.addCallback(TelloStreamModule.this);
+            }
+        });
     }
 
     @Override
@@ -32,25 +38,42 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void startStream() {
-        try {
-            receiver = new UDPReceiver(11111);
-            decoder = new H264Decoder(surfaceHolder);
-            decoder.init();
+        reactContext.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    receiver = new UDPReceiver(11111);
+                    decoder = new H264Decoder(surfaceHolder);
+                    decoder.init();
 
-            isStreaming = true;
-            while (isStreaming) {
-                byte[] data = receiver.receive();
-                decoder.decode(data);
+                    isStreaming = true;
+                    while (isStreaming) {
+                        byte[] data = receiver.receive();
+                        if (data != null && data.length > 0) {
+                            decoder.decode(data);
+                        }
+                    }
+                } catch (Exception e) {
+                    // Handle exception
+                }
             }
-        } catch (Exception e) {
-            // Handle exception
-        }
+        });
     }
 
     @ReactMethod
     public void stopStream() {
         isStreaming = false;
-        decoder.release();
-        receiver.close();
+        if (decoder != null) {
+            decoder.release();
+        }
+        if (receiver != null) {
+            receiver.close();
+        }
+    }
+
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        stopStream();
     }
 }

@@ -5,7 +5,7 @@ import com.anonymous.Kizuna.H264Decoder;
 import android.view.SurfaceView;
 import android.view.Surface;
 
-public class StreamingView extends SimpleViewManager<SurfaceView> {
+public class StreamingViewManager extends SimpleViewManager<SurfaceView> {
     public static final String REACT_CLASS = "StreamView";
 
     @Override
@@ -17,7 +17,7 @@ public class StreamingView extends SimpleViewManager<SurfaceView> {
     protected SurfaceView createViewInstance(ThemedReactContext reactContext) {
         SurfaceView surfaceView = new SurfaceView(reactContext);
         // Initialize your H264Decoder with the Surface from the SurfaceView
-        H264Decoder decoder = new H264Decoder(surfaceView.getHolder().getSurface());
+        H264Decoder decoder = new H264Decoder(surfaceView.getHolder());
         return surfaceView;
     }
 }

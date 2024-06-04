@@ -7,7 +7,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
 import com.anonymous.Kizuna.TelloStreamModule;
-import com.anonymous.Kizuna.StreamViewManager;
+import com.anonymous.Kizuna.StreamingViewManager;
 
 
 public class TelloStreamPackage implements ReactPackage {
@@ -21,7 +21,7 @@ public class TelloStreamPackage implements ReactPackage {
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
         List<ViewManager> managers = new ArrayList<>();
-        managers.add(new StreamViewManager());
+        managers.add(new StreamingViewManager());
         return managers;
     }
 }
