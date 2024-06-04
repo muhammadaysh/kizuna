@@ -14,6 +14,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
     private UDPReceiver receiver;
     private H264Decoder decoder;
     private volatile boolean isStreaming = false;
+    private boolean startStreamFlag = false;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private ReactApplicationContext reactContext;
@@ -29,8 +30,16 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
         return "TelloStreamModule";
     }
 
+      @ReactMethod
+    public void setStartStreamFlag(boolean flag) {
+        this.startStreamFlag = flag;
+    }
+
     @ReactMethod
     public void startStream() {
+        if (!startStreamFlag) {
+            return;
+        }
         Activity activity = reactContext.getCurrentActivity();
         if (activity != null) {
             activity.runOnUiThread(new Runnable() {
@@ -99,6 +108,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
     @ReactMethod
     public void stopStream() {
         isStreaming = false;
+        setStartStreamFlag(false);
         if (decoder != null) {
             decoder.release();
             decoder = null;
