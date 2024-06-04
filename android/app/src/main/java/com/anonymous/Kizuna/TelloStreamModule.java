@@ -52,9 +52,16 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 public void run() {
                     isStreaming = true;
                     while (isStreaming) {
-                        byte[] data = receiver.receive();
-                        if (data != null && data.length > 0) {
-                            decoder.decode(data);
+                        try {
+                            byte[] data = receiver.receive();
+                            if (data != null && data.length > 0) {
+                                decoder.decode(data);
+                            }
+                        } catch (IOException e) {
+                            System.err.println("Error receiving data: " + e.getMessage());
+                            e.printStackTrace();
+                            
+                            isStreaming = false;
                         }
                     }
                 }
