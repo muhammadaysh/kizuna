@@ -20,15 +20,17 @@ public class TelloStreamModule extends ReactContextBaseJavaModule implements Sur
     private SurfaceHolder surfaceHolder;
 
     public TelloStreamModule(ReactApplicationContext reactContext) {
-        super(reactContext);
-        reactContext.runOnUiThread(new Runnable() {
+       super(reactContext);
+    Activity activity = reactContext.getCurrentActivity();
+    if (activity != null) {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 surfaceView = new SurfaceView(reactContext);
                 surfaceHolder = surfaceView.getHolder();
-                surfaceHolder.addCallback(TelloStreamModule.this);
             }
         });
+    }
     }
 
     @Override
@@ -71,9 +73,4 @@ public class TelloStreamModule extends ReactContextBaseJavaModule implements Sur
         }
     }
 
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        stopStream();
-    }
 }
