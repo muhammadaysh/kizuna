@@ -1,26 +1,25 @@
 package com.anonymous.Kizuna;
+
+import android.app.Activity;
+import android.view.SurfaceView;
+import android.view.SurfaceHolder;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.ReactPackage;
-import com.facebook.react.bridge.NativeModule;
-import com.facebook.react.uimanager.ViewManager;
-import java.util.ArrayList;
-import java.util.List;
 import com.anonymous.Kizuna.UDPReceiver;
 import com.anonymous.Kizuna.H264Decoder;
-import android.view.SurfaceView;
-import android.view.SurfaceHolder;
 
-public class TelloStreamModule extends ReactContextBaseJavaModule implements SurfaceHolder.Callback {
+public class TelloStreamModule extends ReactContextBaseJavaModule {
     private UDPReceiver receiver;
     private H264Decoder decoder;
     private volatile boolean isStreaming = false;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
+    private ReactApplicationContext reactContext;
 
     public TelloStreamModule(ReactApplicationContext reactContext) {
         super(reactContext);
+        this.reactContext = reactContext;
     }
 
     @Override
@@ -73,4 +72,5 @@ public class TelloStreamModule extends ReactContextBaseJavaModule implements Sur
             receiver.close();
         }
     }
+
 }
