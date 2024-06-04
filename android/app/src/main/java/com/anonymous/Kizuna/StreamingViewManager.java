@@ -14,7 +14,7 @@ public class StreamingViewManager extends SimpleViewManager<SurfaceView> {
     }
 
    @Override
-    protected StreamingView createViewInstance(ThemedReactContext reactContext) {
-        return new StreamingView(reactContext);
+    protected SurfaceView createViewInstance(ThemedReactContext reactContext) {
+        return new StreamingView(reactContext).getSurfaceView();
     }
 }
