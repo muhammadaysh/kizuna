@@ -10,7 +10,7 @@ import com.anonymous.Kizuna.UDPReceiver;
 import com.anonymous.Kizuna.H264Decoder;
 import java.io.IOException;
 
-public class TelloStreamModule extends ReactContextBaseJavaModule implements SurfaceHolder.Callback  {
+public class TelloStreamModule extends ReactContextBaseJavaModule  {
     private UDPReceiver receiver;
     private H264Decoder decoder;
     private volatile boolean isStreaming = false;
@@ -57,9 +57,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule implements Sur
 
                         @Override
                         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                            if (decoder != null) {
-                                decoder.configure(width, height);
-                            }
+                            
                         }
 
                         @Override
