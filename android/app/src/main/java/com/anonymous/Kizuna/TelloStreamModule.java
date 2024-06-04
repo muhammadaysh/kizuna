@@ -10,13 +10,14 @@ import com.anonymous.Kizuna.UDPReceiver;
 import com.anonymous.Kizuna.H264Decoder;
 import java.io.IOException;
 
-public class TelloStreamModule extends ReactContextBaseJavaModule {
+public class TelloStreamModule extends ReactContextBaseJavaModule implements SurfaceHolder.Callback  {
     private UDPReceiver receiver;
     private H264Decoder decoder;
     private volatile boolean isStreaming = false;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private ReactApplicationContext reactContext;
+    private Thread streamThread;
 
     public TelloStreamModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -37,36 +38,63 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 public void run() {
                     surfaceView = new SurfaceView(reactContext);
                     surfaceHolder = surfaceView.getHolder();
+                    surfaceHolder.addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder holder) {
+                            try {
+                                if (receiver == null) {
+                                    receiver = new UDPReceiver(11111);
+                                }
+                                if (decoder == null) {
+                                    decoder = new H264Decoder(holder);
+                                    decoder.init();
+                                }
+                                startReceiving();
+                            } catch (Exception e) {
+                                // Handle exception
+                            }
+                        }
 
-                    try {
-                        receiver = new UDPReceiver(11111);
-                        decoder = new H264Decoder(surfaceHolder);
-                        decoder.init();
-                    } catch (Exception e) {
-                        // Handle exception
-                    }
+                        @Override
+                        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                            if (decoder != null) {
+                                decoder.configure(width, height);
+                            }
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder holder) {
+                            stopStream();
+                        }
+                    });
                 }
             });
+        }
+    }
 
-            new Thread(new Runnable() {
+    private void startReceiving() {
+        if (streamThread == null || !streamThread.isAlive()) {
+            streamThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     isStreaming = true;
                     while (isStreaming) {
                         try {
-                            byte[] data = receiver.receive();
-                            if (data != null && data.length > 0) {
-                                decoder.decode(data);
+                            if (receiver != null) {
+                                byte[] data = receiver.receive();
+                                if (data != null && data.length > 0 && decoder != null) {
+                                    decoder.decode(data);
+                                }
                             }
                         } catch (IOException e) {
                             System.err.println("Error receiving data: " + e.getMessage());
                             e.printStackTrace();
-                            
                             isStreaming = false;
                         }
                     }
                 }
-            }).start();
+            });
+            streamThread.start();
         }
     }
 
@@ -75,10 +103,11 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
         isStreaming = false;
         if (decoder != null) {
             decoder.release();
+            decoder = null;
         }
         if (receiver != null) {
             receiver.close();
+            receiver = null;
         }
     }
-
 }
