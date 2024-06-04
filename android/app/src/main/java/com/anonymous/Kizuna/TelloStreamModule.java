@@ -36,7 +36,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    surfaceView = new SurfaceView(reactContext);
+                    surfaceView = new StreamingView(reactContext).getSurfaceView();                    
                     surfaceHolder = surfaceView.getHolder();
                     surfaceHolder.addCallback(new SurfaceHolder.Callback() {
                         @Override

@@ -40,7 +40,7 @@ import {
 } from "ffmpeg-kit-react-native";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
-const StreamViewJava = requireNativeComponent('StreamView');
+const StreamingViewJava = requireNativeComponent('StreamingView');
 const { TelloStreamModule } = NativeModules;
 
 
@@ -342,7 +342,7 @@ export default function DroneScreen({ navigation, route }) {
           </View>
           {showPlayer && (
             <View style={styles.videoContainer}>
-              <StreamViewJava style={{ width: 300, height: 300 }} />
+              <StreamingViewJava style={{ width: 300, height: 300 }} />
               
             </View>
           )}
