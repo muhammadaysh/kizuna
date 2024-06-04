@@ -16,8 +16,23 @@ public class StreamingViewManager extends SimpleViewManager<SurfaceView> {
     @Override
     protected SurfaceView createViewInstance(ThemedReactContext reactContext) {
         SurfaceView surfaceView = new SurfaceView(reactContext);
-        // Initialize your H264Decoder with the Surface from the SurfaceView
-        H264Decoder decoder = new H264Decoder(surfaceView.getHolder());
+        surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                // Initialize your H264Decoder with the Surface from the SurfaceView
+                H264Decoder decoder = new H264Decoder(holder);
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                // Handle surface changed
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                // Handle surface destroyed
+            }
+        });
         return surfaceView;
     }
 }
