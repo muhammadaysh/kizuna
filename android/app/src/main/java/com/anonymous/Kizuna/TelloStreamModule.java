@@ -10,7 +10,10 @@ import com.anonymous.Kizuna.UDPReceiver;
 import com.anonymous.Kizuna.H264Decoder;
 import java.io.IOException;
 
-public class TelloStreamModule extends ReactContextBaseJavaModule  {
+import android.util.Log;
+
+public class TelloStreamModule extends ReactContextBaseJavaModule {
+
     private UDPReceiver receiver;
     private H264Decoder decoder;
     private volatile boolean isStreaming = false;
@@ -30,13 +33,17 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
         return "TelloStreamModule";
     }
 
-      @ReactMethod
+    @ReactMethod
     public void setStartStreamFlag(boolean flag) {
         this.startStreamFlag = flag;
+        Log.d("TelloStreamModule", "setStartStreamFlag: " + flag);
+
     }
 
     @ReactMethod
     public void startStream() {
+        Log.d("TelloStreamModule", "startStream called");
+
         if (!startStreamFlag) {
             return;
         }
@@ -45,7 +52,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    surfaceView = new StreamingView(reactContext).getSurfaceView();                    
+                    surfaceView = new StreamingView(reactContext).getSurfaceView();
                     surfaceHolder = surfaceView.getHolder();
                     surfaceHolder.addCallback(new SurfaceHolder.Callback() {
                         @Override
@@ -66,7 +73,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
 
                         @Override
                         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                            
+
                         }
 
                         @Override
@@ -107,6 +114,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule  {
 
     @ReactMethod
     public void stopStream() {
+        Log.d("TelloStreamModule", "stopStream called");
         isStreaming = false;
         setStartStreamFlag(false);
         if (decoder != null) {

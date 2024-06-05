@@ -1,4 +1,5 @@
 package com.anonymous.Kizuna;
+
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.view.SurfaceHolder;
@@ -6,10 +7,11 @@ import java.nio.ByteBuffer;
 import java.io.IOException;
 
 public class H264Decoder {
+
     private MediaCodec codec;
     private SurfaceHolder surfaceHolder;
-    private long timeoutUs = 10000; 
-    private long presentationTimeUs = 0; 
+    private long timeoutUs = 10000;
+    private long presentationTimeUs = 0;
 
     public H264Decoder(SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
