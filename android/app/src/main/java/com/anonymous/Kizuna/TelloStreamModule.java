@@ -126,4 +126,17 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
             receiver = null;
         }
     }
+
+    @ReactMethod
+    public void removeView(int viewId) {
+    UIManagerModule uiManager = getReactApplicationContext().getNativeModule(UIManagerModule.class);
+    uiManager.addUIBlock(new UIBlock() {
+        @Override
+        public void execute(NativeViewHierarchyManager nativeViewHierarchyManager) {
+            View view = nativeViewHierarchyManager.resolveView(viewId);
+            ViewGroup parent = (ViewGroup) view.getParent();
+            parent.removeView(view);
+        }
+    });
+}
 }

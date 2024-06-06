@@ -2,6 +2,7 @@ package com.anonymous.Kizuna;
 
 import android.content.Context;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 public class StreamingView extends FrameLayout {
@@ -9,7 +10,14 @@ public class StreamingView extends FrameLayout {
 
     public StreamingView(Context context) {
         super(context);
-        surfaceView = new SurfaceView(context);
+        if (surfaceView == null) {
+            surfaceView = new SurfaceView(context);
+        } else {
+            ViewGroup parent = (ViewGroup) surfaceView.getParent();
+            if (parent != null) {
+                parent.removeView(surfaceView);
+            }
+        }
         addView(surfaceView);
     }
 
