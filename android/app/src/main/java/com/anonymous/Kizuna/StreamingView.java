@@ -10,11 +10,7 @@ public class StreamingView extends FrameLayout {
 
     public StreamingView(Context context) {
         super(context);
-        if (surfaceView == null) {
-            surfaceView = new SurfaceView(context);
-        } else {
-            removeSurfaceViewFromParent();
-        }
+        surfaceView = new SurfaceView(context);
         addView(surfaceView);
     }
 
