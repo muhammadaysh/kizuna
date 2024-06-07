@@ -20,6 +20,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     private boolean startStreamFlag = false;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
+    private StreamingView streamingView;
     private ReactApplicationContext reactContext;
     private Thread streamThread;
 
@@ -125,6 +126,12 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
             receiver.close();
             receiver = null;
         }
+    }
+
+
+    @ReactMethod
+    public void removeSurfaceViewFromParent() {
+        streamingView.removeSurfaceViewFromParent();
     }
 
 }

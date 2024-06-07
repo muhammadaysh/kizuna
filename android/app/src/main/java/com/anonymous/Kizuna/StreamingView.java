@@ -13,15 +13,19 @@ public class StreamingView extends FrameLayout {
         if (surfaceView == null) {
             surfaceView = new SurfaceView(context);
         } else {
-            ViewGroup parent = (ViewGroup) surfaceView.getParent();
-            if (parent != null) {
-                parent.removeView(surfaceView);
-            }
+            removeSurfaceViewFromParent();
         }
         addView(surfaceView);
     }
 
     public SurfaceView getSurfaceView() {
         return surfaceView;
+    }
+
+    public void removeSurfaceViewFromParent() {
+        ViewGroup parent = (ViewGroup) surfaceView.getParent();
+        if (parent != null) {
+            parent.removeView(surfaceView);
+        }
     }
 }
