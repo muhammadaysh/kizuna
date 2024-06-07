@@ -44,7 +44,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void startStream() {
         Log.d("TelloStreamModule", "startStream called");
-
+    
         if (!startStreamFlag) {
             return;
         }
@@ -53,39 +53,46 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    surfaceView = new StreamingView(reactContext).getSurfaceView();
+                    if (streamingView != null) {
+                        streamingView.getSurfaceView().getHolder().removeCallback(callback);
+                        streamingView.release(); 
+                        streamingView = null;
+                    }
+                    streamingView = new StreamingView(reactContext);
+                    surfaceView = streamingView.getSurfaceView();
                     surfaceHolder = surfaceView.getHolder();
-                    surfaceHolder.addCallback(new SurfaceHolder.Callback() {
-                        @Override
-                        public void surfaceCreated(SurfaceHolder holder) {
-                            try {
-                                if (receiver == null) {
-                                    receiver = new UDPReceiver(11111);
-                                }
-                                if (decoder == null) {
-                                    decoder = new H264Decoder(holder);
-                                    decoder.init();
-                                }
-                                startReceiving();
-                            } catch (Exception e) {
-                                // Handle exception
-                            }
-                        }
-
-                        @Override
-                        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-                        }
-
-                        @Override
-                        public void surfaceDestroyed(SurfaceHolder holder) {
-                            stopStream();
-                        }
-                    });
+                    surfaceHolder.addCallback(callback);
                 }
             });
         }
     }
+    private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            try {
+                if (receiver == null) {
+                    receiver = new UDPReceiver(11111);
+                }
+                if (decoder == null) {
+                    decoder = new H264Decoder(holder);
+                    decoder.init();
+                }
+                startReceiving();
+            } catch (Exception e) {
+
+            }
+        }
+    
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    
+        }
+    
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            stopStream();
+        }
+    };
 
     private void startReceiving() {
         if (streamThread == null || !streamThread.isAlive()) {
