@@ -55,7 +55,6 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 public void run() {
                     if (streamingView != null) {
                         streamingView.getSurfaceView().getHolder().removeCallback(callback);
-                        streamingView.release(); 
                         streamingView = null;
                     }
                     streamingView = new StreamingView(reactContext);
