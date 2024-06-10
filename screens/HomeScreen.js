@@ -41,13 +41,13 @@ export default function HomeScreen() {
     }
   };
 
-  // useEffect(() => {
-  //   fetchWeatherData();
-  //   const interval = setInterval(() => {
-  //     fetchWeatherData();
-  //   }, 30000);
-  //   return () => clearInterval(interval);
-  // }, []);
+  useEffect(() => {
+    fetchWeatherData();
+    const interval = setInterval(() => {
+      fetchWeatherData();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     startPulse();
@@ -79,7 +79,7 @@ export default function HomeScreen() {
   };
   useFocusEffect(
     React.useCallback(() => {
-      // fetchWeatherData();
+      fetchWeatherData();
     }, [])
   );
 

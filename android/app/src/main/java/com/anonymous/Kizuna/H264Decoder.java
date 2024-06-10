@@ -17,31 +17,46 @@ public class H264Decoder {
         this.surfaceHolder = surfaceHolder;
     }
 
-    public void init() throws IOException {
-        codec = MediaCodec.createDecoderByType("video/avc");
-        MediaFormat format = MediaFormat.createVideoFormat("video/avc", 1280, 720);
-        codec.configure(format, surfaceHolder.getSurface(), null, 0);
-        codec.start();
+    public void init() {
+        try {
+            codec = MediaCodec.createDecoderByType("video/avc");
+            MediaFormat format = MediaFormat.createVideoFormat("video/avc", 1280, 720);
+            codec.configure(format, surfaceHolder.getSurface(), null, 0);
+            codec.start();
+        } catch (IOException e) {
+            System.err.println("Error initializing codec: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public void decode(byte[] input) {
-        int inputBufferIndex = codec.dequeueInputBuffer(timeoutUs);
-        if (inputBufferIndex >= 0) {
-            ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
-            inputBuffer.put(input);
-            codec.queueInputBuffer(inputBufferIndex, 0, input.length, presentationTimeUs, 0);
-        }
+        try {
+            int inputBufferIndex = codec.dequeueInputBuffer(timeoutUs);
+            if (inputBufferIndex >= 0) {
+                ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
+                inputBuffer.put(input);
+                codec.queueInputBuffer(inputBufferIndex, 0, input.length, presentationTimeUs, 0);
+            }
 
-        MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-        int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
-        while (outputBufferIndex >= 0) {
-            codec.releaseOutputBuffer(outputBufferIndex, true);
-            outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
+            MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+            int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
+            while (outputBufferIndex >= 0) {
+                codec.releaseOutputBuffer(outputBufferIndex, true);
+                outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
+            }
+        } catch (Exception e) {
+            System.err.println("Error decoding input: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void release() {
-        codec.stop();
-        codec.release();
+        try {
+            codec.stop();
+            codec.release();
+        } catch (Exception e) {
+            System.err.println("Error releasing codec: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

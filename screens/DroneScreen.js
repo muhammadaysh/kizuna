@@ -109,7 +109,7 @@ export default function DroneScreen({ navigation, route }) {
   const sendCommand = (command) => {
     if (!command) {
       console.error("Command is undefined");
-      return;
+      return; 
     } else {
       client.current.send(
         command,
@@ -368,7 +368,6 @@ const styles = StyleSheet.create({
     width: screenWidth * 0.9,
     margin: 30,
     borderWidth: 1,
-    borderColor: "green",
     height: 300,
     justifyContent: "center",
     alignItems: "center",
