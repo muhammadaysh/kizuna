@@ -19,15 +19,16 @@ public class UDPReceiver {
         }
     }
 
-    public byte[] receive() {
-        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        try {
-            socket.receive(packet);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Error receiving packet: " + e.getMessage(), e);
-        }
-        return packet.getData();
+    public byte[] receive() throws IOException {
+    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+    try {
+        socket.receive(packet);
+    } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Error receiving packet: " + e.getMessage(), e);
+        throw e;
     }
+    return packet.getData();
+}
 
     public void close() {
         socket.close();
