@@ -162,7 +162,7 @@ export default function DroneScreen({ navigation, route }) {
         sendCommand("streamon");
         setIsLoading(false);
         connectAndStartStreaming();
-        TelloStreamModule.setStartStreamFlag(true);
+        TelloStreamModule.startStream();
         // startFFmpegStream();
         
 
