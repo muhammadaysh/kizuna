@@ -11,8 +11,8 @@ public class H264Decoder {
     private MediaCodec codec;
     private SurfaceHolder surfaceHolder;
     private long timeoutUs = 10000;
+    private static final long FRAME_RATE = 30; 
     private long presentationTimeUs = 0;
-
     public H264Decoder(SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
     }
@@ -29,29 +29,30 @@ public class H264Decoder {
         }
     }
 
-   public void decode(byte[] input) throws IOException {
-    try {
-        int inputBufferIndex = codec.dequeueInputBuffer(timeoutUs);
-        if (inputBufferIndex >= 0) {
-            ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
-            inputBuffer.put(input);
-            codec.queueInputBuffer(inputBufferIndex, 0, input.length, presentationTimeUs, 0);
-        }
+    public void decode(byte[] input) throws IOException {
+        try {
+            int inputBufferIndex = codec.dequeueInputBuffer(timeoutUs);
+            if (inputBufferIndex >= 0) {
+                ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
+                inputBuffer.put(input);
+                codec.queueInputBuffer(inputBufferIndex, 0, input.length, presentationTimeUs, 0);
+                presentationTimeUs += 1000000 / FRAME_RATE;
+            }
 
-        MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-        int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
-        while (outputBufferIndex >= 0) {
-            codec.releaseOutputBuffer(outputBufferIndex, true);
-            outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
-        }
-    } catch (Exception e) {
-        System.err.println("Error decoding input: " + e.getMessage());
-        e.printStackTrace();
-        if (e instanceof IOException) {
-            throw (IOException) e;
+            MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+            int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
+            while (outputBufferIndex >= 0) {
+                codec.releaseOutputBuffer(outputBufferIndex, true);
+                outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
+            }
+        } catch (Exception e) {
+            System.err.println("Error decoding input: " + e.getMessage());
+            e.printStackTrace();
+            if (e instanceof IOException) {
+                throw (IOException) e;
+            }
         }
     }
- }
 
     public void release() {
         try {
