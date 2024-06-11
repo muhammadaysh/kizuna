@@ -45,17 +45,28 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 @Override
                 public void run() {
                     Log.d(TAG, "Start stream is running!!");
+                    StreamingView newStreamingView = new StreamingView(reactContext);
+                    SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
+                    SurfaceHolder newSurfaceHolder = newSurfaceView.getHolder();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            newSurfaceHolder.addCallback(callback);
+                            Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
+                        }
+                    }, 500);
+                    
                     if (streamingView != null) {
-                        SurfaceView surfaceView = streamingView.getSurfaceView();
-                        ((ViewGroup)surfaceView.getParent()).removeView(surfaceView);
-                        surfaceView.getHolder().removeCallback(callback);
-                        streamingView = null;
+                        SurfaceView oldSurfaceView = streamingView.getSurfaceView();
+                        ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
+                        oldSurfaceView.getHolder().removeCallback(callback);
+                        Log.d(TAG, "StreamingView is not null before surface creation");
                     }
-                    streamingView = new StreamingView(reactContext);
-                    surfaceView = streamingView.getSurfaceView();
-                    surfaceHolder = surfaceView.getHolder();
-                    surfaceHolder.addCallback(callback);
-                }
+                    
+                    streamingView = newStreamingView;
+                    surfaceView = newSurfaceView;
+                    surfaceHolder = newSurfaceHolder;
+            }
             });
         } else {
             Log.d(TAG, "Current activity is null");
@@ -64,7 +75,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
-                        Log.d(TAG, "Surface created");
+            Log.d(TAG, "Surface created");
 
             try {
                 if (receiver == null) {
@@ -76,6 +87,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 }
                 startReceiving();
             } catch (Exception e) {
+                        Log.e(TAG, "Exception in surfaceCreated", e);
 
             }
         }

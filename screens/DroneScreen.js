@@ -91,7 +91,7 @@ export default function DroneScreen({ navigation, route }) {
   useEffect(() => {
     const delay = setTimeout(() => {
       setShowPlayer(true);
-    }, 10000);
+    }, 600);
 
     return () => clearTimeout(delay);
   }, []);
@@ -181,7 +181,7 @@ export default function DroneScreen({ navigation, route }) {
           ToastAndroid.LONG
         );
       }
-    }, 5000);
+    }, 500);
   };
 
   const startMoving = (dpad, direction) => {
