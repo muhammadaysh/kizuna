@@ -94,27 +94,28 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
         if (streamThread == null || !streamThread.isAlive()) {
             streamThread = new Thread(new Runnable() {
                 @Override
-                    public void run() {
-                        Log.d(TAG, "Stream thread started");
-                        isStreaming = true;
-                        while (isStreaming && !Thread.currentThread().isInterrupted()) {
-                            try {
-                                if (receiver != null) {
-                                    byte[] data = receiver.receive();
-                                    if (data != null && data.length > 0 && decoder != null) {
-                                        decoder.decode(data);
-                                    }
-                                }
-                            } catch (IOException e) {
-                                Log.e(TAG, "Error receiving data: " + e.getMessage(), e);
-                                isStreaming = false;
-                            } catch (InterruptedException e) {
-                                Log.d(TAG, "Stream thread interrupted");
-                                Thread.currentThread().interrupt();
-                            }
+                public void run() {
+                    Log.d(TAG, "Stream thread started");
+                    isStreaming = true;
+                    while (isStreaming) {
+                        if (Thread.interrupted()) {
+                            Log.d(TAG, "Stream thread interrupted");
+                            break;
                         }
-                        Log.d(TAG, "Stream thread stopped");
+                        try {
+                            if (receiver != null) {
+                                byte[] data = receiver.receive();
+                                if (data != null && data.length > 0 && decoder != null) {
+                                    decoder.decode(data);
+                                }
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, "Error receiving data: " + e.getMessage(), e);
+                            isStreaming = false;
+                        }
                     }
+                    Log.d(TAG, "Stream thread stopped");
+                }
             });
             streamThread.start();
         }
