@@ -5,9 +5,12 @@ import android.util.Log;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.view.SurfaceHolder;
+
 
 public class StreamingView extends FrameLayout {
     private SurfaceView surfaceView;
+    private SurfaceHolder.Callback callback; 
     private static final String TAG = "StreamingView";
 
     
