@@ -342,6 +342,7 @@ export default function DroneScreen({ navigation, route }) {
           </View>
           {showPlayer && (
             <View style={styles.videoContainer}>
+              {console.log('Rendering StreamingViewJava')}
               <StreamingViewJava style={{ width: 400, height: 300 }} />
               
             </View>

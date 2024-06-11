@@ -46,6 +46,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 public void run() {
                     Log.d(TAG, "Start stream is running!!");
                     StreamingView newStreamingView = new StreamingView(reactContext, callback); 
+                    newStreamingView.initializeAndAddSurfaceView(); 
                     SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
                     Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
                 

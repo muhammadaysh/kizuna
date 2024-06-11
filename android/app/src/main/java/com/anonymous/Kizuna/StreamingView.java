@@ -50,11 +50,9 @@ public class StreamingView extends FrameLayout {
         Log.d(TAG, "StreamingView detached from window");
     }
 
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
+   public void initializeAndAddSurfaceView() {
         addSurfaceViewToParent();
         surfaceView.getHolder().addCallback(callback); 
-        Log.d(TAG, "StreamingView attached to window");
+        Log.d(TAG, "SurfaceView initialized and added to StreamingView");
     }
 }
