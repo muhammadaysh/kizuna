@@ -2,6 +2,7 @@ package com.anonymous.Kizuna;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import java.nio.ByteBuffer;
 import java.io.IOException;
@@ -13,6 +14,8 @@ public class H264Decoder {
     private long timeoutUs = 10000;
     private static final long FRAME_RATE = 30; 
     private long presentationTimeUs = 0;
+    private static final String TAG = "H264Decoder";
+
     public H264Decoder(SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
     }
@@ -24,8 +27,7 @@ public class H264Decoder {
             codec.configure(format, surfaceHolder.getSurface(), null, 0);
             codec.start();
         } catch (IOException e) {
-            System.err.println("Error initializing codec: " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "Error initializing codec: " + e.getMessage(), e);
         }
     }
 
@@ -46,8 +48,7 @@ public class H264Decoder {
                 outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
             }
         } catch (Exception e) {
-            System.err.println("Error decoding input: " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "Error decoding input: " + e.getMessage(), e);
             if (e instanceof IOException) {
                 throw (IOException) e;
             }
@@ -59,8 +60,7 @@ public class H264Decoder {
             codec.stop();
             codec.release();
         } catch (Exception e) {
-            System.err.println("Error releasing codec: " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "Error releasing codec: " + e.getMessage(), e);
         }
     }
 }

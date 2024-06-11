@@ -3,32 +3,31 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import android.util.Log;
 
 public class UDPReceiver {
     private DatagramSocket socket;
     private byte[] buffer = new byte[1024];
-    private static final Logger LOGGER = Logger.getLogger(UDPReceiver.class.getName());
+    private static final String TAG = "UDPReceiver";
 
     public UDPReceiver(int port) {
         try {
             socket = new DatagramSocket(port);
         } catch (SocketException e) {
-            LOGGER.log(Level.SEVERE, "Error creating socket: " + e.getMessage(), e);
+            Log.e(TAG, "Error creating socket: " + e.getMessage(), e);
         }
     }
 
     public byte[] receive() throws IOException {
-    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-    try {
-        socket.receive(packet);
-    } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Error receiving packet: " + e.getMessage(), e);
-        throw e;
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+        try {
+            socket.receive(packet);
+        } catch (IOException e) {
+            Log.e(TAG, "Error receiving packet: " + e.getMessage(), e);
+            throw e;
+        }
+        return packet.getData();
     }
-    return packet.getData();
-}
 
     public void close() {
         socket.close();

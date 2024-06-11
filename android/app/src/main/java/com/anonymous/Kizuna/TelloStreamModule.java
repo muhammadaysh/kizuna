@@ -60,6 +60,8 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
+                        Log.d(TAG, "Surface created");
+
             try {
                 if (receiver == null) {
                     receiver = new UDPReceiver(11111);
@@ -76,11 +78,13 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                Log.d(TAG, "Surface changed");
     
         }
     
         @Override
         public void surfaceDestroyed(SurfaceHolder holder) {
+            Log.d(TAG, "Surface destroyed");
             stopStream();
         }
     };
@@ -89,23 +93,27 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
         if (streamThread == null || !streamThread.isAlive()) {
             streamThread = new Thread(new Runnable() {
                 @Override
-                public void run() {
-                    isStreaming = true;
-                    while (isStreaming) {
-                        try {
-                            if (receiver != null) {
-                                byte[] data = receiver.receive();
-                                if (data != null && data.length > 0 && decoder != null) {
-                                    decoder.decode(data);
+                    public void run() {
+                        Log.d(TAG, "Stream thread started");
+                        isStreaming = true;
+                        while (isStreaming && !Thread.currentThread().isInterrupted()) {
+                            try {
+                                if (receiver != null) {
+                                    byte[] data = receiver.receive();
+                                    if (data != null && data.length > 0 && decoder != null) {
+                                        decoder.decode(data);
+                                    }
                                 }
+                            } catch (IOException e) {
+                                Log.e(TAG, "Error receiving data: " + e.getMessage(), e);
+                                isStreaming = false;
+                            } catch (InterruptedException e) {
+                                Log.d(TAG, "Stream thread interrupted");
+                                Thread.currentThread().interrupt();
                             }
-                        } catch (IOException e) {
-                            System.err.println("Error receiving data: " + e.getMessage());
-                            e.printStackTrace();
-                            isStreaming = false;
                         }
+                        Log.d(TAG, "Stream thread stopped");
                     }
-                }
             });
             streamThread.start();
         }
@@ -115,6 +123,10 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     public void stopStream() {
         Log.d("TelloStreamModule", "stopStream called");
         isStreaming = false;
+        if (streamThread != null) {
+            streamThread.interrupt();
+            streamThread = null;
+        }
         if (decoder != null) {
             decoder.release();
             decoder = null;
@@ -124,7 +136,6 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
             receiver = null;
         }
     }
-
 
     @ReactMethod
     public void removeSurfaceViewFromParent() {
