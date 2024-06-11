@@ -23,6 +23,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     private StreamingView streamingView;
     private ReactApplicationContext reactContext;
     private Thread streamThread;
+    private static final String TAG = "TelloStreamModule";
 
     public TelloStreamModule(ReactApplicationContext reactContext) {
         super(reactContext);
