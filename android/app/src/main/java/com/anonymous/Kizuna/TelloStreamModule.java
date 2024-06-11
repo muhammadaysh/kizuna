@@ -37,13 +37,14 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void startStream() {
-        Log.d("TelloStreamModule", "startStream called");
+        Log.d(TAG, "startStream called");
     
         Activity activity = reactContext.getCurrentActivity();
         if (activity != null) {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.d(TAG, "Start stream is running!!");
                     if (streamingView != null) {
                         SurfaceView surfaceView = streamingView.getSurfaceView();
                         ((ViewGroup)surfaceView.getParent()).removeView(surfaceView);
@@ -56,6 +57,8 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                     surfaceHolder.addCallback(callback);
                 }
             });
+        } else {
+            Log.d(TAG, "Current activity is null");
         }
     }
     private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
