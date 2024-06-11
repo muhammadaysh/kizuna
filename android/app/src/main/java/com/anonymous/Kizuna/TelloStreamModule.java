@@ -38,40 +38,33 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void startStream() {
         Log.d(TAG, "startStream called");
-    
+
         Activity activity = reactContext.getCurrentActivity();
         if (activity != null) {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG, "Start stream is running!!");
-                    StreamingView newStreamingView = new StreamingView(reactContext);
+                    StreamingView newStreamingView = new StreamingView(reactContext, callback); 
                     SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
-                    SurfaceHolder newSurfaceHolder = newSurfaceView.getHolder();
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            newSurfaceHolder.addCallback(callback);
-                            Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
-                        }
-                    }, 500);
-                    
+                    Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
+                
                     if (streamingView != null) {
                         SurfaceView oldSurfaceView = streamingView.getSurfaceView();
                         ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
                         oldSurfaceView.getHolder().removeCallback(callback);
                         Log.d(TAG, "StreamingView is not null before surface creation");
                     }
-                    
+                
                     streamingView = newStreamingView;
                     surfaceView = newSurfaceView;
-                    surfaceHolder = newSurfaceHolder;
-            }
+                }
             });
         } else {
             Log.d(TAG, "Current activity is null");
         }
     }
+
     private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
