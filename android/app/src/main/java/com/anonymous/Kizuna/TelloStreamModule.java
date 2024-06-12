@@ -39,14 +39,14 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void startStream() {
         Log.d(TAG, "startStream called");
-    
+
         Activity activity = reactContext.getCurrentActivity();
         if (activity != null) {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG, "Start stream is running!!");
-                    StreamingView newStreamingView = new StreamingView(reactContext); 
+                    StreamingView newStreamingView = new StreamingView(reactContext, callback); 
                     newStreamingView.initializeAndAddSurfaceView(); 
                     SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
                     newSurfaceView.setVisibility(View.VISIBLE); 
@@ -55,41 +55,51 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                     if (streamingView != null) {
                         SurfaceView oldSurfaceView = streamingView.getSurfaceView();
                         ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
+                        oldSurfaceView.getHolder().removeCallback(callback);
                         Log.d(TAG, "StreamingView is not null before surface creation");
-    
-                        if (!oldSurfaceView.getHolder().getSurface().isValid()) {
-                            stopStream();
-                        }
                     }
                 
                     streamingView = newStreamingView;
                     surfaceView = newSurfaceView;
-    
-                    if (surfaceView.getHolder().getSurface().isValid()) {
-                        surfaceCreated(surfaceView.getHolder());
-                    }
                 }
             });
         } else {
             Log.d(TAG, "Current activity is null");
         }
     }
-    private void surfaceCreated(SurfaceHolder holder) {
-    Log.d(TAG, "Surface created");
 
-    try {
-        if (receiver == null) {
-            receiver = new UDPReceiver(11111);
+    private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            Log.d(TAG, "Surface created");
+
+            try {
+                if (receiver == null) {
+                    receiver = new UDPReceiver(11111);
+                }
+                if (decoder == null) {
+                    decoder = new H264Decoder(holder);
+                    decoder.init();
+                }
+                startReceiving();
+            } catch (Exception e) {
+                        Log.e(TAG, "Exception in surfaceCreated", e);
+
+            }
         }
-        if (decoder == null) {
-            decoder = new H264Decoder(holder);
-            decoder.init();
+    
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                Log.d(TAG, "Surface changed");
+    
         }
-        startReceiving();
-    } catch (Exception e) {
-        Log.e(TAG, "Exception in surfaceCreated", e);
-    }
-    }
+    
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            Log.d(TAG, "Surface destroyed");
+            stopStream();
+        }
+    };
 
     private void startReceiving() {
         if (streamThread == null || !streamThread.isAlive()) {
