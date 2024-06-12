@@ -37,49 +37,44 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void startStream() {
-        Log.d(TAG, "startStream called");
+public void startStream() {
+    Log.d(TAG, "startStream called");
 
-        Activity activity = reactContext.getCurrentActivity();
-        if (activity != null) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Start stream is running!!");
-                    StreamingView newStreamingView = new StreamingView(reactContext); 
-                    newStreamingView.initializeAndAddSurfaceView(); 
-                    SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
-                    newSurfaceView.setVisibility(View.VISIBLE); 
-                    Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
-                
-                    if (streamingView != null) {
-                        SurfaceView oldSurfaceView = streamingView.getSurfaceView();
-                        ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
-                        Log.d(TAG, "StreamingView is not null before surface creation");
-                    }
-                
-                    streamingView = newStreamingView;
-                    surfaceView = newSurfaceView;
-                    surfaceHolder = surfaceView.getHolder();
+    Activity activity = reactContext.getCurrentActivity();
+    if (activity != null) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Start stream is running!!");
+                StreamingView newStreamingView = new StreamingView(reactContext); 
+                newStreamingView.initializeAndAddSurfaceView(); 
+                SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
+                newSurfaceView.setVisibility(View.VISIBLE); 
+                Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
 
-                     try {
-                        if (receiver == null) {
-                            receiver = new UDPReceiver(11111);
-                        }
-                        if (decoder == null) {
-                            decoder = new H264Decoder(surfaceHolder);
-                            decoder.init();
-                        }
-                        startReceiving();
-                    } catch (Exception e) {
-                        Log.e(TAG, "Exception in startStream", e);
+                streamingView = newStreamingView;
+                surfaceView = newSurfaceView;
+                surfaceHolder = surfaceView.getHolder();
+
+                try {
+                    if (receiver == null) {
+                        receiver = new UDPReceiver(11111);
                     }
+                    if (decoder == null) {
+                        decoder = new H264Decoder(surfaceHolder);
+                        decoder.init();
+                    }
+                    startReceiving();
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception in startStream", e);
                 }
-            });
-        } else {
-            Log.d(TAG, "Current activity is null");
-        }
+            }
+        });
+    } else {
+        Log.d(TAG, "Current activity is null");
     }
+    }
+    
 
     private void startReceiving() {
         if (streamThread == null || !streamThread.isAlive()) {
@@ -111,7 +106,6 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
             streamThread.start();
         }
     }
-
     @ReactMethod
     public void stopStream() {
         Log.d("TelloStreamModule", "stopStream called");
@@ -127,6 +121,11 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
         if (receiver != null) {
             receiver.close();
             receiver = null;
+        }
+        if (streamingView != null) {
+            SurfaceView oldSurfaceView = streamingView.getSurfaceView();
+            ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
+            streamingView = null;
         }
     }
 
