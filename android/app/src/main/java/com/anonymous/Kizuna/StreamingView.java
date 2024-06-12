@@ -16,7 +16,6 @@ public class StreamingView extends FrameLayout {
 
     public StreamingView(Context context) { 
         super(context);
-        this.callback = callback; 
         surfaceView = new SurfaceView(context);
         Log.d(TAG, "SurfaceView created");
        
