@@ -57,10 +57,18 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                         ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
                         oldSurfaceView.getHolder().removeCallback(callback);
                         Log.d(TAG, "StreamingView is not null before surface creation");
+
+                        if (!oldSurfaceView.getHolder().getSurface().isValid()) {
+                        stopStream();
+                        }
                     }
                 
                     streamingView = newStreamingView;
                     surfaceView = newSurfaceView;
+
+                    if (surfaceView.getHolder().getSurface().isValid()) {
+                    surfaceCreated(surfaceView.getHolder());
+                }
                 }
             });
         } else {
@@ -68,38 +76,22 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            Log.d(TAG, "Surface created");
+    private void surfaceCreated(SurfaceHolder holder) {
+    Log.d(TAG, "Surface created");
 
-            try {
-                if (receiver == null) {
-                    receiver = new UDPReceiver(11111);
-                }
-                if (decoder == null) {
-                    decoder = new H264Decoder(holder);
-                    decoder.init();
-                }
-                startReceiving();
-            } catch (Exception e) {
-                        Log.e(TAG, "Exception in surfaceCreated", e);
-
-            }
+    try {
+        if (receiver == null) {
+            receiver = new UDPReceiver(11111);
         }
-    
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.d(TAG, "Surface changed");
-    
+        if (decoder == null) {
+            decoder = new H264Decoder(holder);
+            decoder.init();
         }
-    
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            Log.d(TAG, "Surface destroyed");
-            stopStream();
-        }
-    };
+        startReceiving();
+    } catch (Exception e) {
+        Log.e(TAG, "Exception in surfaceCreated", e);
+    }
+    }
 
     private void startReceiving() {
         if (streamThread == null || !streamThread.isAlive()) {
