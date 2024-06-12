@@ -48,6 +48,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                     StreamingView newStreamingView = new StreamingView(reactContext, callback); 
                     newStreamingView.initializeAndAddSurfaceView(); 
                     SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
+                    newSurfaceView.setVisibility(View.VISIBLE); 
                     Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
                 
                     if (streamingView != null) {

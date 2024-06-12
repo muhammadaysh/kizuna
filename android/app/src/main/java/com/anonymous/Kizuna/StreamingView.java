@@ -51,8 +51,8 @@ public class StreamingView extends FrameLayout {
     }
 
    public void initializeAndAddSurfaceView() {
-        addSurfaceViewToParent();
         surfaceView.getHolder().addCallback(callback); 
+        addSurfaceViewToParent();
         Log.d(TAG, "SurfaceView initialized and added to StreamingView");
     }
 }
