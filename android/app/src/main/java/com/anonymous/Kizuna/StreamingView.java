@@ -10,14 +10,12 @@ import android.view.SurfaceHolder;
 
 public class StreamingView extends FrameLayout {
     private SurfaceView surfaceView;
-    private SurfaceHolder.Callback callback; 
     private static final String TAG = "StreamingView";
 
     
 
     public StreamingView(Context context, SurfaceHolder.Callback callback) { 
         super(context);
-        this.callback = callback; 
         surfaceView = new SurfaceView(context);
         Log.d(TAG, "SurfaceView created");
     }
@@ -51,7 +49,6 @@ public class StreamingView extends FrameLayout {
     }
 
    public void initializeAndAddSurfaceView() {
-        surfaceView.getHolder().addCallback(callback); 
         addSurfaceViewToParent();
         Log.d(TAG, "SurfaceView initialized and added to StreamingView");
     }

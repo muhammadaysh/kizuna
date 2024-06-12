@@ -39,14 +39,14 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void startStream() {
         Log.d(TAG, "startStream called");
-
+    
         Activity activity = reactContext.getCurrentActivity();
         if (activity != null) {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG, "Start stream is running!!");
-                    StreamingView newStreamingView = new StreamingView(reactContext, callback); 
+                    StreamingView newStreamingView = new StreamingView(reactContext); 
                     newStreamingView.initializeAndAddSurfaceView(); 
                     SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
                     newSurfaceView.setVisibility(View.VISIBLE); 
@@ -55,27 +55,25 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                     if (streamingView != null) {
                         SurfaceView oldSurfaceView = streamingView.getSurfaceView();
                         ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
-                        oldSurfaceView.getHolder().removeCallback(callback);
                         Log.d(TAG, "StreamingView is not null before surface creation");
-
+    
                         if (!oldSurfaceView.getHolder().getSurface().isValid()) {
-                        stopStream();
+                            stopStream();
                         }
                     }
                 
                     streamingView = newStreamingView;
                     surfaceView = newSurfaceView;
-
+    
                     if (surfaceView.getHolder().getSurface().isValid()) {
-                    surfaceCreated(surfaceView.getHolder());
-                }
+                        surfaceCreated(surfaceView.getHolder());
+                    }
                 }
             });
         } else {
             Log.d(TAG, "Current activity is null");
         }
     }
-
     private void surfaceCreated(SurfaceHolder holder) {
     Log.d(TAG, "Surface created");
 
