@@ -55,7 +55,6 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                     if (streamingView != null) {
                         SurfaceView oldSurfaceView = streamingView.getSurfaceView();
                         ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
-                        oldSurfaceView.getHolder().removeCallback(callback);
                         Log.d(TAG, "StreamingView is not null before surface creation");
                     }
                 
