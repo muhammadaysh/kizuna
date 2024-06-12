@@ -12,6 +12,7 @@ import java.io.IOException;
 import android.view.ViewGroup;
 import android.util.Log;
 import android.os.Handler;
+import android.view.View;
 
 public class TelloStreamModule extends ReactContextBaseJavaModule {
 
