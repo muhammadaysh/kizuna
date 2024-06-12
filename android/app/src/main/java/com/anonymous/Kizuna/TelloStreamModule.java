@@ -60,6 +60,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 
                     streamingView = newStreamingView;
                     surfaceView = newSurfaceView;
+                    surfaceHolder = surfaceView.getHolder();
 
                      try {
                         if (receiver == null) {
