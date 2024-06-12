@@ -254,7 +254,7 @@ export default function DroneScreen({ navigation, route }) {
         </>
       ) : (
         <>
-          <View style={styles.buttonGroup}>
+          {/* <View style={styles.buttonGroup}>
             <TouchableOpacity
               style={styles.buttonContainer}
               onPress={() => sendCommand("takeoff")}
@@ -339,7 +339,7 @@ export default function DroneScreen({ navigation, route }) {
                 <AntDesign name="arrowdown" size={24} color="white" />
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
           {showPlayer && (
             <View style={styles.videoContainer}>
               {console.log('Rendering StreamingViewJava')}

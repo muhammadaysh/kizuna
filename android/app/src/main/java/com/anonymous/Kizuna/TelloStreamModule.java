@@ -46,7 +46,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 @Override
                 public void run() {
                     Log.d(TAG, "Start stream is running!!");
-                    StreamingView newStreamingView = new StreamingView(reactContext, callback); 
+                    StreamingView newStreamingView = new StreamingView(reactContext); 
                     newStreamingView.initializeAndAddSurfaceView(); 
                     SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
                     newSurfaceView.setVisibility(View.VISIBLE); 
@@ -61,45 +61,25 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
                 
                     streamingView = newStreamingView;
                     surfaceView = newSurfaceView;
+
+                     try {
+                        if (receiver == null) {
+                            receiver = new UDPReceiver(11111);
+                        }
+                        if (decoder == null) {
+                            decoder = new H264Decoder(surfaceHolder);
+                            decoder.init();
+                        }
+                        startReceiving();
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception in startStream", e);
+                    }
                 }
             });
         } else {
             Log.d(TAG, "Current activity is null");
         }
     }
-
-    private final SurfaceHolder.Callback callback = new SurfaceHolder.Callback() {
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            Log.d(TAG, "Surface created");
-
-            try {
-                if (receiver == null) {
-                    receiver = new UDPReceiver(11111);
-                }
-                if (decoder == null) {
-                    decoder = new H264Decoder(holder);
-                    decoder.init();
-                }
-                startReceiving();
-            } catch (Exception e) {
-                        Log.e(TAG, "Exception in surfaceCreated", e);
-
-            }
-        }
-    
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.d(TAG, "Surface changed");
-    
-        }
-    
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            Log.d(TAG, "Surface destroyed");
-            stopStream();
-        }
-    };
 
     private void startReceiving() {
         if (streamThread == null || !streamThread.isAlive()) {
