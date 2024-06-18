@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.util.Log;
 import android.os.Handler;
 import android.view.View;
+import com.facebook.react.uimanager.UIManagerModule;
 
 public class TelloStreamModule extends ReactContextBaseJavaModule {
 
@@ -25,6 +26,7 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     private ReactApplicationContext reactContext;
     private Thread streamThread;
     private static final String TAG = "TelloStreamModule";
+    private int streamingViewId;
 
     public TelloStreamModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -37,62 +39,68 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void startStream() {
+    public void startStream(int viewId) {
+        streamingViewId = viewId;
         Log.d(TAG, "startStream called");
-    
+
         Activity activity = reactContext.getCurrentActivity();
-        if (activity != null) {
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Start stream is running!!");
-                    StreamingView newStreamingView = new StreamingView(reactContext); 
-                    newStreamingView.initializeAndAddSurfaceView(); 
-                    SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
-                    newSurfaceView.setVisibility(View.VISIBLE); 
-                    Log.d(TAG, "SurfaceView visibility: " + newSurfaceView.getVisibility());
-    
-                    streamingView = newStreamingView;
-                    surfaceView = newSurfaceView;
-                    surfaceHolder = surfaceView.getHolder();
-    
-                    surfaceHolder.addCallback(new SurfaceHolder.Callback() {
-                        @Override
-                        public void surfaceCreated(SurfaceHolder holder) {
-                            Log.d(TAG, "Surface created successfully!");
-                            try {
-                                if (receiver == null) {
-                                    receiver = new UDPReceiver(11111);
-                                }
-                                if (decoder == null) {
-                                    decoder = new H264Decoder(surfaceHolder);
-                                    decoder.init();
-                                }
-                                startReceiving();
-                            } catch (Exception e) {
-                                Log.e(TAG, "Exception in startStream", e);
-                            }
-                        }
-    
-                        @Override
-                        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                            // Handle surface changed
-                        }
-    
-                        @Override
-                        public void surfaceDestroyed(SurfaceHolder holder) {
-                            // Handle surface destroyed
-                        }
-                    });
+        if (activity != null && !activity.isFinishing() && !activity.isDestroyed()) {
+            activity.runOnUiThread(() -> {
+                Log.d(TAG, "Start stream is running on UI thread");
+                UIManagerModule uiManager = reactContext.getNativeModule(UIManagerModule.class);
+                StreamingView newStreamingView = (StreamingView) uiManager.resolveView(viewId);
+
+                if (newStreamingView == null) {
+                    Log.e(TAG, "Failed to resolve StreamingView");
+                    return;
                 }
+
+                Log.d(TAG, "Initializing and adding SurfaceView");
+                newStreamingView.initializeAndAddSurfaceView();
+                SurfaceView newSurfaceView = newStreamingView.getSurfaceView();
+                surfaceView = newSurfaceView;
+                surfaceHolder = surfaceView.getHolder();
+
+                if (surfaceHolder != null) {
+                    Log.d(TAG, "getHolder() returned a valid SurfaceHolder.");
+                } else {
+                    Log.d(TAG, "getHolder() returned null.");
+                }
+
+                newStreamingView.setSurfaceCreatedListener(holder -> {
+                    Log.d(TAG, "Surface created successfully!");
+                    try {
+                        if (receiver == null) {
+                            receiver = new UDPReceiver(11111);
+                        }
+                        if (decoder == null) {
+                            decoder = new H264Decoder(holder); 
+                            decoder.init();
+                        }
+                        startReceiving();
+                    } catch (Exception e) {
+                        Log.e(TAG, "Exception in surfaceCreated", e);
+                    }
+                });
+
+                ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                );
+                newSurfaceView.setLayoutParams(params);
+
+                newSurfaceView.setVisibility(View.VISIBLE);
+                newSurfaceView.requestLayout(); 
+                Log.d(TAG, "SurfaceView visibility set to VISIBLE");
+
+                streamingView = newStreamingView;
             });
         } else {
-            Log.d(TAG, "Current activity is null");
+            Log.d(TAG, "Current activity is null or finishing or destroyed");
         }
     }
-    
 
-    private void startReceiving() {
+      private void startReceiving() {
         if (streamThread == null || !streamThread.isAlive()) {
             streamThread = new Thread(new Runnable() {
                 @Override
@@ -122,9 +130,10 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
             streamThread.start();
         }
     }
+
     @ReactMethod
     public void stopStream() {
-        Log.d("TelloStreamModule", "stopStream called");
+        Log.d(TAG, "stopStream called");
         isStreaming = false;
         if (streamThread != null) {
             streamThread.interrupt();
@@ -138,16 +147,29 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
             receiver.close();
             receiver = null;
         }
-        if (streamingView != null) {
-            SurfaceView oldSurfaceView = streamingView.getSurfaceView();
-            ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
-            streamingView = null;
+
+        Activity activity = reactContext.getCurrentActivity();
+        if (activity != null && !activity.isFinishing() && !activity.isDestroyed()) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    UIManagerModule uiManager = reactContext.getNativeModule(UIManagerModule.class);
+                    StreamingView streamingView = (StreamingView) uiManager.resolveView(streamingViewId);
+                    if (streamingView != null) {
+                        SurfaceView oldSurfaceView = streamingView.getSurfaceView();
+                        ((ViewGroup)oldSurfaceView.getParent()).removeView(oldSurfaceView);
+                    }
+                }
+            });
+        } else {
+            Log.d(TAG, "Current activity is null");
         }
     }
 
-    @ReactMethod
-    public void removeSurfaceViewFromParent() {
-        streamingView.removeSurfaceViewFromParent();
-    }
-
+   
 }
+
+    
+
+  
+

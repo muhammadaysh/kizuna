@@ -17,7 +17,8 @@ import {
   ActivityIndicator,
   ToastAndroid,
   requireNativeComponent,
-  NativeModules
+  NativeModules,
+  findNodeHandle,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import dgram from "react-native-udp";
@@ -40,10 +41,8 @@ import {
 } from "ffmpeg-kit-react-native";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
-const StreamingViewJava = requireNativeComponent('StreamingView');
+const StreamingViewJava = requireNativeComponent("StreamingView");
 const { TelloStreamModule } = NativeModules;
-
-
 
 const screenWidth = Dimensions.get("window").width;
 const appDirectory = FileSystem.cacheDirectory;
@@ -61,6 +60,7 @@ export default function DroneScreen({ navigation, route }) {
   const [showPlayer, setShowPlayer] = useState(false);
 
   const playerRef = useRef(null);
+  const streamingViewRef = useRef(null);
 
 
   useFocusEffect(
@@ -75,14 +75,14 @@ export default function DroneScreen({ navigation, route }) {
     }, [])
   );
 
-  useEffect(() => {
-    if (isStreaming) {
-      Orientation.lockToLandscape();
-    } else {
-      Orientation.lockToPortrait();
-      TelloStreamModule.stopStream();
-    }
-  }, [isStreaming]);
+  // useEffect(() => {
+  //   if (isStreaming) {
+  //     Orientation.lockToLandscape();
+  //   } else {
+  //     Orientation.lockToPortrait();
+  //     // TelloStreamModule.stopStream();
+  //   }
+  // }, [isStreaming]);
 
   useEffect(() => {
     console.log("isStreaming changed:", isStreaming);
@@ -109,7 +109,7 @@ export default function DroneScreen({ navigation, route }) {
   const sendCommand = (command) => {
     if (!command) {
       console.error("Command is undefined");
-      return; 
+      return;
     } else {
       client.current.send(
         command,
@@ -162,9 +162,7 @@ export default function DroneScreen({ navigation, route }) {
         sendCommand("streamon");
         setIsLoading(false);
         connectAndStartStreaming();
-        TelloStreamModule.startStream();
         // startFFmpegStream();
-        
 
         server.current.removeListener("message", messageListener);
       }
@@ -183,6 +181,27 @@ export default function DroneScreen({ navigation, route }) {
       }
     }, 500);
   };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      console.log('Ref current value:', streamingViewRef.current);
+  
+      if (streamingViewRef.current) {
+        const handle = findNodeHandle(streamingViewRef.current);
+        console.log('Attempting to start stream with handle:', handle);
+        try {
+          TelloStreamModule.startStream(handle);
+          console.log('Stream started successfully');
+        } catch (error) {
+          console.error('Failed to start stream:', error);
+        }
+      } else {
+        console.warn('streamingViewRef.current is not set');
+      }
+    }, 3000); 
+  
+    return () => clearTimeout(timeoutId); // Cleanup function to clear the timeout
+  }, [streamingViewRef.current]);
 
   const startMoving = (dpad, direction) => {
     let command;
@@ -342,9 +361,11 @@ export default function DroneScreen({ navigation, route }) {
           </View> */}
           {showPlayer && (
             <View style={styles.videoContainer}>
-              {console.log('Rendering StreamingViewJava')}
-              <StreamingViewJava style={{ width: 400, height: 300 }} />
-              
+              {console.log("Rendering StreamingViewJava")}
+              <StreamingViewJava
+                ref={streamingViewRef}
+                style={{ width: '100%', height: 400 }}
+              />
             </View>
           )}
         </>
@@ -372,8 +393,8 @@ const styles = StyleSheet.create({
     height: 300,
     justifyContent: "center",
     alignItems: "center",
-    position: "absolute",
-    zIndex: -1,
+    // position: "absolute",
+    
   },
   buttonContainer: {
     width: 200,

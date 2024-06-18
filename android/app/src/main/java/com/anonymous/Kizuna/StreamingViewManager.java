@@ -5,7 +5,7 @@ import com.anonymous.Kizuna.H264Decoder;
 import android.view.SurfaceView;
 import android.view.Surface;
 
-public class StreamingViewManager extends SimpleViewManager<SurfaceView> {
+public class StreamingViewManager extends SimpleViewManager<StreamingView> {
     public static final String REACT_CLASS = "StreamingView";
 
     @Override
@@ -13,10 +13,8 @@ public class StreamingViewManager extends SimpleViewManager<SurfaceView> {
         return REACT_CLASS;
     }
 
-  
     @Override
-    protected SurfaceView createViewInstance(ThemedReactContext reactContext) {
-        return new SurfaceView(reactContext);
+    protected StreamingView createViewInstance(ThemedReactContext reactContext) {
+        return new StreamingView(reactContext);
     }
-
 }
