@@ -75,14 +75,13 @@ export default function DroneScreen({ navigation, route }) {
     }, [])
   );
 
-  // useEffect(() => {
-  //   if (isStreaming) {
-  //     Orientation.lockToLandscape();
-  //   } else {
-  //     Orientation.lockToPortrait();
-  //     // TelloStreamModule.stopStream();
-  //   }
-  // }, [isStreaming]);
+  useEffect(() => {
+    if (isStreaming) {
+      Orientation.lockToLandscape();
+    } else {
+      Orientation.lockToPortrait();
+    }
+  }, [isStreaming]);
 
   useEffect(() => {
     console.log("isStreaming changed:", isStreaming);
@@ -273,7 +272,7 @@ export default function DroneScreen({ navigation, route }) {
         </>
       ) : (
         <>
-          {/* <View style={styles.buttonGroup}>
+          <View style={styles.buttonGroup}>
             <TouchableOpacity
               style={styles.buttonContainer}
               onPress={() => sendCommand("takeoff")}
@@ -358,13 +357,13 @@ export default function DroneScreen({ navigation, route }) {
                 <AntDesign name="arrowdown" size={24} color="white" />
               </TouchableOpacity>
             </View>
-          </View> */}
+          </View>
           {showPlayer && (
             <View style={styles.videoContainer}>
               {console.log("Rendering StreamingViewJava")}
               <StreamingViewJava
                 ref={streamingViewRef}
-                style={{ width: '100%', height: 400 }}
+                style={{ width: '100%', height: 350 }}
               />
             </View>
           )}
@@ -391,9 +390,10 @@ const styles = StyleSheet.create({
     margin: 30,
     borderWidth: 1,
     height: 300,
+    zIndex: -1,
     justifyContent: "center",
     alignItems: "center",
-    // position: "absolute",
+    position: "absolute",
     
   },
   buttonContainer: {

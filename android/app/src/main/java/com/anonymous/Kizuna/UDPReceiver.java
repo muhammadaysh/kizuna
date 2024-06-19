@@ -7,7 +7,7 @@ import android.util.Log;
 
 public class UDPReceiver {
     private DatagramSocket socket;
-    private byte[] buffer = new byte[2048];
+    private byte[] buffer = new byte[2406]; 
     private static final String TAG = "UDPReceiver";
 
     public UDPReceiver(int port) {
@@ -26,11 +26,13 @@ public class UDPReceiver {
         try {
             socket.receive(packet);
             Log.d(TAG, "Packet received. Length: " + packet.getLength() + " bytes from " + packet.getAddress().toString());
+            byte[] receivedData = new byte[packet.getLength()];
+            System.arraycopy(buffer, 0, receivedData, 0, packet.getLength());
+            return receivedData;
         } catch (IOException e) {
             Log.e(TAG, "Error receiving packet: " + e.getMessage(), e);
             throw e;
         }
-        return packet.getData();
     }
 
     public void close() {
