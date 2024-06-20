@@ -17,6 +17,7 @@ import iconMap from "../components/WeatherIcons";
 import { Dimensions } from "react-native";
 import KText from "../components/KText";
 import Icon from "react-native-vector-icons/FontAwesome5";
+import WeatherError from "../assets/weatherError";
 
 const { height } = Dimensions.get("window");
 
@@ -36,11 +37,12 @@ export default function HomeScreen() {
       setIsLoading(false);
     } catch (error) {
       console.error(error);
-      // setError(error);
+      setError(
+        "Failed to fetch weather data. Weather data cannot be fetched when connected to Drone"
+      );
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     fetchWeatherData();
     const interval = setInterval(() => {
@@ -92,7 +94,20 @@ export default function HomeScreen() {
   }
 
   if (error) {
-    return <KText>Error: {error.message}</KText>;
+    return (
+      <View style={styles.container}>
+        <Animated.View
+          style={{
+            transform: [{ scale: pulseAnim }],
+          }}
+        >
+          <WeatherError width={250} height={250} />
+        </Animated.View>
+        <KText style={{ textAlign: "center", fontWeight: "bold" }}>
+          {error}
+        </KText>
+      </View>
+    );
   }
 
   if (!weatherData) {
@@ -133,7 +148,6 @@ export default function HomeScreen() {
         >
           <TouchableOpacity onPress={startRotation}>
             {WeatherIcon}
-            
           </TouchableOpacity>
         </Animated.View>
         <KText style={styles.temperature}>{`${Math.round(

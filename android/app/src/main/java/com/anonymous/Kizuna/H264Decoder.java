@@ -40,10 +40,9 @@ public class H264Decoder {
         try {
             frameBuffer.write(packet);
             if (packet.length < MAX_PACKET_SIZE) {
-                // This packet indicates the end of a frame
                 byte[] frame = frameBuffer.toByteArray();
-                frameBuffer.reset(); // Clear the buffer for the next frame
-                Log.d(TAG, "Assembled frame for decoding, size: " + frame.length); 
+                frameBuffer.reset(); 
+                Log.d(TAG, "Assembled frame for decoding, size: " + frame.length);
                 int inputBufferIndex = codec.dequeueInputBuffer(timeoutUs);
                 if (inputBufferIndex >= 0) {
                     ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
@@ -51,21 +50,35 @@ public class H264Decoder {
                         inputBuffer.clear();
                         inputBuffer.put(frame);
                         codec.queueInputBuffer(inputBufferIndex, 0, frame.length, presentationTimeUs, 0);
-                        Log.d(TAG, "Frame queued for decoding, buffer index: " + inputBufferIndex); // Log when frame is queued for decoding
-                        presentationTimeUs += 1000000 / 25; 
+                        Log.d(TAG, "Frame queued for decoding, buffer index: " + inputBufferIndex);
+                        presentationTimeUs += 1000000 / 25;
                     }
                 }
-    
+
                 MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
                 int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
                 while (outputBufferIndex >= 0) {
                     codec.releaseOutputBuffer(outputBufferIndex, true);
-                    Log.d(TAG, "Frame outputted, buffer index: " + outputBufferIndex); // Log when frame is outputted
+                    Log.d(TAG, "Frame outputted, buffer index: " + outputBufferIndex);
                     outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, timeoutUs);
                 }
             }
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Codec encountered an error, reinitializing: " + e.getMessage(), e);
+            reinitializeCodec();
         } catch (Exception e) {
             Log.e(TAG, "Error processing packet/frame: " + e.getMessage(), e);
+        }
+    }
+
+    private void reinitializeCodec() {
+        try {
+            codec.stop();
+            codec.release();
+            init(); // Reinitialize the codec
+            Log.d(TAG, "Codec reinitialized");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to reinitialize codec: " + e.getMessage(), e);
         }
     }
     public void release() {

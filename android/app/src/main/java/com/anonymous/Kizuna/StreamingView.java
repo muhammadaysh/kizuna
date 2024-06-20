@@ -10,16 +10,17 @@ import android.view.SurfaceHolder;
 public class StreamingView extends FrameLayout {
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
+    private TelloStreamModule telloStreamModule;
     private static final String TAG = "StreamingView";
 
     public StreamingView(Context context) {
         super(context);
+        this.telloStreamModule = telloStreamModule;
         surfaceView = new SurfaceView(context);
         surfaceHolder = surfaceView.getHolder();
         Log.d(TAG, "SurfaceView created");
         addView(surfaceView);
 
-        // Register the callback here
         surfaceHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
@@ -38,7 +39,9 @@ public class StreamingView extends FrameLayout {
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
                 Log.d(TAG, "Surface destroyed in StreamingView");
-                // Handle surface destruction here if needed
+                if (telloStreamModule != null) {
+                        telloStreamModule.stopStream();
+                    }            
             }
         });
     }
@@ -85,6 +88,7 @@ public class StreamingView extends FrameLayout {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         removeSurfaceViewFromParent();
+        
         Log.d(TAG, "StreamingView detached from window");
     }
 

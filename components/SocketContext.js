@@ -12,24 +12,21 @@ export function SocketProvider({ children }) {
   useEffect(() => {
     client.current = dgram.createSocket("udp4");
     server.current = dgram.createSocket("udp4");
-    // videoServer.current = dgram.createSocket("udp4");
-    // encodedStream.current = dgram.createSocket("udp4");
+  
 
     try {
       client.current.bind(8889);
       server.current.bind(8890);
-      // videoServer.current.bind(11111);
-      // encodedStream.current.bind(49152);
+    
     } catch (err) {
       console.error("Failed to bind socket", err);
       return;
     }
 
     return () => {
-      client.current.close();
-      server.current.close();
-      videoServer.current.close();
-      encodedStream.current.close();
+      if (client.current) client.current.close();
+      if (server.current) server.current.close();
+      
     };
   }, []);
 
