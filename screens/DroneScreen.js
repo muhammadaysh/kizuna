@@ -19,12 +19,14 @@ import {
   requireNativeComponent,
   NativeModules,
   findNodeHandle,
+  PanResponder,
+  Text,
+  Platform,
+  Linking,
+  Alert,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import dgram from "react-native-udp";
 import KText from "../components/KText";
-import { VLCPlayer, VlCPlayerView } from "react-native-vlc-media-player";
-import Video from "react-native-video";
 import _ from "lodash";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import Orientation from "react-native-orientation-locker";
@@ -34,23 +36,17 @@ import {
 } from "../components/StreamingContext";
 import { SocketContext, SocketProvider } from "../components/SocketContext";
 import { AntDesign } from "@expo/vector-icons";
-import {
-  FFmpegKit,
-  FFmpegKitConfig,
-  ReturnCode,
-} from "ffmpeg-kit-react-native";
 import * as FileSystem from "expo-file-system";
 import DroneFly from "../assets/droneFly.svg";
-import * as MediaLibrary from "expo-media-library";
+import { MaterialIcons } from "@expo/vector-icons";
 const StreamingViewJava = requireNativeComponent("StreamingView");
 const { TelloStreamModule } = NativeModules;
+import { JoystickLeft, JoystickRight } from "../components/Joystick";
 
 const screenWidth = Dimensions.get("window").width;
-const appDirectory = FileSystem.cacheDirectory;
-const outputPath = FileSystem.cacheDirectory + "output.mp4";
 
 export default function DroneScreen({ navigation, route }) {
-  const { isStreaming, connectAndStartStreaming } =
+  const { isStreaming, connectAndStartStreaming, stopStreaming } =
     useContext(StreamingContext);
   const { client, server, videoServer, encodedStream } =
     useContext(SocketContext);
@@ -60,7 +56,56 @@ export default function DroneScreen({ navigation, route }) {
   const [moveInterval, setMoveInterval] = useState(null);
   const [showPlayer, setShowPlayer] = useState(false);
   const [language, setLanguage] = useState("english");
+  const [batteryPercentage, setBatteryPercentage] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
+  const openWifiSettings = async () => {
+    if (Platform.OS === "android") {
+      try {
+        await Linking.openURL("android.settings.WIFI_SETTINGS");
+      } catch (e) {
+        console.error(
+          "Failed to open Wi-Fi settings directly, opening app settings as fallback.",
+          e
+        );
+        Linking.openSettings();
+      }
+    } else if (Platform.OS === "ios") {
+      Linking.openURL("App-Prefs:root=WIFI");
+    }
+  };
+
+  const handlePress = (prop) => {
+    if (prop === "off") {
+      Alert.alert(
+        "Confirmation",
+        "Are you sure you want to stop streaming?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
+          },
+          { text: "OK", onPress: () => handleStopStreaming() },
+        ],
+        { cancelable: true }
+      );
+    } else if (prop === "emergency") {
+      Alert.alert(
+        "Confirmation",
+        "Are you sure you want to proceed with emergency?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
+          },
+          { text: "OK", onPress: () => sendCommand("emergency") },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
   const toggleLanguage = () => {
     setLanguage((prevLanguage) =>
       prevLanguage === "english" ? "japanese" : "english"
@@ -135,45 +180,89 @@ export default function DroneScreen({ navigation, route }) {
     }
   };
 
-  const handleConnectAndStartStreaming = () => {
-    setIsLoading(true);
-    sendCommand("command");
+  useEffect(() => {
+    const sendInitialCommand = () => {
+      sendCommand("command");
 
-    let receivedResponse = false;
+      const messageListener = (msg, rinfo) => {
+        console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-    const messageListener = (msg, rinfo) => {
-      console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        if (msg) {
+          sendCommand("speed 30");
+          setIsConnected(true);
+          server.current.removeListener("message", messageListener);
+          clearInterval(autoConnectInterval);
+        }
+      };
 
-      if (msg) {
-        receivedResponse = true;
-        sendCommand("speed 30");
-        sendCommand("streamon");
-        setIsLoading(false);
-        connectAndStartStreaming();
-
-        server.current.removeListener("message", messageListener);
-      }
+      server.current.on("message", messageListener);
     };
 
-    server.current.on("message", messageListener);
-
-    // Delay before checking for response from drone
-    setTimeout(() => {
-      if (!receivedResponse) {
-        setIsLoading(false);
-        ToastAndroid.show(
-          "No response from drone. Please check if drone is connected via wifi.",
-          ToastAndroid.LONG
-        );
+    const autoConnectInterval = setInterval(() => {
+      if (!isConnected) {
+        sendInitialCommand();
+      } else {
+        clearInterval(autoConnectInterval);
       }
-    }, 500);
+    }, 3000);
+    return () => clearInterval(autoConnectInterval);
+  }, [sendCommand, setIsConnected, setIsLoading, isConnected]);
+
+  const handleConnectAndStartStreaming = () => {
+    if (!isConnected) {
+      setIsLoading(true);
+      sendCommand("command");
+
+      let receivedResponse = false;
+
+      const messageListener = (msg, rinfo) => {
+        console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+
+        if (msg) {
+          setIsConnected(true);
+          receivedResponse = true;
+          sendCommand("speed 30");
+          sendCommand("streamon");
+          setIsLoading(false);
+          connectAndStartStreaming();
+
+          server.current.removeListener("message", messageListener);
+        }
+      };
+
+      server.current.on("message", messageListener);
+
+      setTimeout(() => {
+        if (!receivedResponse) {
+          setIsLoading(false);
+          ToastAndroid.show(
+            "No response from drone. Please check if drone is connected via wifi.",
+            ToastAndroid.LONG
+          );
+        }
+      }, 500);
+    } else {
+      sendCommand("streamon");
+      connectAndStartStreaming();
+    }
+  };
+
+  const handleStopStreaming = () => {
+    if (isConnected) {
+      sendCommand("streamoff");
+      stopStreaming();
+      Orientation.lockToPortrait();
+      // navigation.navigate("DroneScreen");
+      console.log("Streaming stopped.");
+    } else {
+      console.log("Not connected. Cannot stop streaming.");
+    }
   };
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      console.log("Ref current value:", streamingViewRef.current);
-
-      if (streamingViewRef.current) {
+    if (isStreaming && streamingViewRef.current) {
+      const timeoutId = setTimeout(() => {
+        console.log("Ref current value:", streamingViewRef.current);
         const handle = findNodeHandle(streamingViewRef.current);
         console.log("Attempting to start stream with handle:", handle);
         try {
@@ -182,41 +271,62 @@ export default function DroneScreen({ navigation, route }) {
         } catch (error) {
           console.error("Failed to start stream:", error);
         }
-      } else {
-        // console.warn("streamingViewRef.current is not set");
-      }
-    }, 3000);
+      }, 3000);
 
-    return () => clearTimeout(timeoutId); // Cleanup function to clear the timeout
-  }, [streamingViewRef.current]);
-
-  const startMoving = (dpad, direction) => {
-    let command;
-    if (dpad === "left") {
-      command = `${direction} 80`;
-    } else {
-      if (direction === "up") {
-        command = "up 40";
-      } else if (direction === "down") {
-        command = "down 40";
-      } else if (direction === "left") {
-        command = "ccw 40";
-      } else if (direction === "right") {
-        command = "cw 40";
-      }
+      return () => clearTimeout(timeoutId);
     }
+  }, [streamingViewRef.current, isStreaming]);
 
-    const interval = setInterval(() => {
-      sendCommand(command);
-    }, 1000);
-    setMoveInterval(interval);
+  useEffect(() => {
+    if (isStreaming) {
+      const batteryCheckInterval = setInterval(() => {
+        sendCommand("battery?");
+      }, 5000);
+
+      const messageListener = (msg) => {
+        handleDroneMessage(msg);
+      };
+
+      client.current.on("message", messageListener);
+
+      return () => {
+        clearInterval(batteryCheckInterval);
+        client.current.removeListener("message", messageListener);
+      };
+    }
+  }, [isStreaming]);
+
+  const handleDroneMessage = (msg) => {
+    const messageString = msg.toString().trim();
+    console.log(messageString);
+    const batteryLevel = parseInt(messageString, 10);
+    setBatteryPercentage(batteryLevel);
   };
 
-  const stopMoving = () => {
-    clearInterval(moveInterval);
-    setMoveInterval(null);
+  const getBatteryIcon = (batteryPercentage) => {
+    if (batteryPercentage >= 75) return "battery-full";
+    if (batteryPercentage >= 50) return "battery-3-bar";
+    if (batteryPercentage >= 25) return "battery-2-bar";
+    return "battery-1-bar";
   };
 
+  const handleLeftMove = ({ leftRight, forwardBackward }) => {
+    sendRCCommand({ leftRight, forwardBackward });
+  };
+
+  const handleRightMove = ({ upDown, yaw }) => {
+    sendRCCommand({ upDown, yaw });
+  };
+
+  const sendRCCommand = ({
+    leftRight = 0,
+    forwardBackward = 0,
+    upDown = 0,
+    yaw = 0,
+  }) => {
+    const command = `rc ${leftRight} ${forwardBackward} ${upDown} ${yaw}`;
+    sendCommand(command);
+  };
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {!isStreaming ? (
@@ -226,159 +336,180 @@ export default function DroneScreen({ navigation, route }) {
             connectAndStartStreaming,
           })}
           <View style={styles.innerContainer}>
-            <DroneFly width={300} height={300} style={{ marginTop: -50 }} />
-            <TouchableOpacity
-              style={[styles.connectButton]}
-              onPress={handleConnectAndStartStreaming}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <ActivityIndicator size="small" color="#fff" />
-                </>
-              ) : (
-                <>
-                  <Icon name="link" size={20} color="#fff" />
-                  <KText style={styles.connectButtonText}>Connect</KText>
-                </>
-              )}
-            </TouchableOpacity>
+            <DroneFly width={300} height={300} style={{ marginTop: -70 }} />
+
             <View style={styles.greyContainer}>
-              <View style={styles.header}>
-                <KText
-                  style={{
-                    textAlign: "centre",
-                    fontWeight: "bold",
-                    fontSize: 20,
-                  }}
-                >
-                  {language === "english" ? "How to connect?" : "接続方法は？"}
-                </KText>
+              <View style={{ justifyContent: "center" }}>
+                <View style={styles.header}>
+                  <KText
+                    style={{
+                      textAlign: "center", // Corrected typo from "centre" to "center"
+                      fontWeight: "bold",
+                      fontSize: 20,
+                    }}
+                  >
+                    {language === "english"
+                      ? "How to connect?"
+                      : "接続方法は？"}
+                  </KText>
+                  <TouchableOpacity
+                    onPress={toggleLanguage}
+                    style={styles.languageButton}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Icon name="language" size={20} color="#fff" />
+                      <KText>
+                        {language === "english" ? " 日本語" : " English"}
+                      </KText>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <View>
+                  <KText
+                    style={{
+                      textAlign: "left",
+                      marginTop: -6,
+                      fontSize: 15,
+                    }}
+                  >
+                    {language === "english"
+                      ? "\n1. Press the power button on the drone"
+                      : "\n1. ドローンの電源ボタンを押してください"}
+                  </KText>
+                  <KText
+                    style={{
+                      textAlign: "left",
+                      marginTop: -6,
+                      fontSize: 15,
+                    }}
+                  >
+                    {"\n2. Connect to the "}
+                    <Text
+                      onPress={openWifiSettings}
+                      style={{
+                        fontWeight: "bold",
+                        textDecorationLine: "underline",
+                        color: "lightblue",
+                      }}
+                    >
+                      {"TELLO-XXXX"}
+                    </Text>
+                    {language === "english" ? " via Wi-Fi" : " Wi-Fi経由で"}
+                  </KText>
+                  <KText
+                    style={{
+                      textAlign: "left",
+                      marginTop: -6,
+                      fontSize: 15,
+                    }}
+                  >
+                    {language === "english"
+                      ? '\n3. Press "Connect" button'
+                      : "\n3. 「Connect」ボタンを押してください"}
+                  </KText>
+                  <KText
+                    style={{
+                      textAlign: "left",
+                      marginTop: -6,
+                      fontSize: 15,
+                    }}
+                  >
+                    {language === "english"
+                      ? "\n4. Start flying!"
+                      : "\n4. 飛行を開始！"}
+                  </KText>
+                </View>
+              </View>
+              <View style={{ alignItems: "center" }}>
                 <TouchableOpacity
-                  onPress={toggleLanguage}
-                  style={styles.languageButton}
+                  style={[styles.connectButton]}
+                  onPress={handleConnectAndStartStreaming}
+                  disabled={isLoading}
                 >
-                  <KText>{language === "english" ? "日本語" : "English"}</KText>
+                  {isLoading ? (
+                    <>
+                      <ActivityIndicator size="small" color="#fff" />
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="link" size={20} color="#fff" />
+                      <KText style={styles.connectButtonText}>Connect</KText>
+                    </>
+                  )}
                 </TouchableOpacity>
               </View>
-
-              <KText
-                style={{
-                  textAlign: "left",
-                  marginTop: -4,
-                  fontSize: 15,
-                  lineHeight: 24,
-                }}
-              >
-                {language === "english"
-                  ? "\n1. Press the power button on the drone" +
-                    '\n2. Connect to the "TELLO-XXXX" via Wi-Fi' +
-                    '\n3. Press "Connect" button' +
-                    "\n4. Start flying!"
-                  : "\n1. ドローンの電源ボタンを押してください" +
-                    '\n2. Wi-Fi経由で"TELLO-XXXX"に接続してください' +
-                    "\n3. 「接続」ボタンを押してください" +
-                    "\n4. 飛行を開始！"}
-              </KText>
             </View>
           </View>
         </>
       ) : (
         <>
-          <View>
-            <View style={styles.buttonGroup}>
+          <View style={[styles.buttonGroup, { flexDirection: "row" }]}>
+            <View style={{ flexDirection: "row" }}>
+              <TouchableOpacity
+                style={[styles.buttonContainer, { backgroundColor: "#bf0615" }]}
+                onPress={() => handlePress("off")}
+              >
+                <MaterialIcons name="power" size={16} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.buttonContainer, { backgroundColor: "orange" }]}
+                onPress={() => handlePress("emergency")}
+              >
+                <MaterialIcons name="warning" size={16} color="white" />
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={() => sendCommand("takeoff")}
               >
-                <KText style={styles.buttonText}>Take Off</KText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.emergencyContainer}
-                onPress={() => sendCommand("emergency")}
-              >
-                <KText style={styles.buttonText}>! !</KText>
+                <MaterialIcons name="flight-takeoff" size={16} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.buttonContainer}
                 onPress={() => sendCommand("land")}
               >
-                <KText style={styles.buttonText}>Land</KText>
+                <MaterialIcons name="flight-land" size={16} color="white" />
               </TouchableOpacity>
             </View>
-            <View style={styles.dpadGroup}>
-              <View style={styles.dpad}>
-                <TouchableOpacity
-                  style={styles.dpadButton}
-                  onPressIn={() => startMoving("left", "forward")}
-                  onPressOut={stopMoving}
-                >
-                  <AntDesign name="arrowup" size={24} color="white" />
-                </TouchableOpacity>
-                <View style={styles.dpadRow}>
-                  <TouchableOpacity
-                    style={styles.dpadButton}
-                    onPressIn={() => startMoving("left", "left")}
-                    onPressOut={stopMoving}
-                  >
-                    <AntDesign name="arrowleft" size={24} color="white" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.dpadButton}
-                    onPressIn={() => startMoving("left", "right")}
-                    onPressOut={stopMoving}
-                  >
-                    <AntDesign name="arrowright" size={24} color="white" />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={styles.dpadButton}
-                  onPressIn={() => startMoving("left", "back")}
-                  onPressOut={stopMoving}
-                >
-                  <AntDesign name="arrowdown" size={24} color="white" />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.dpad}>
-                <TouchableOpacity
-                  style={styles.dpadButton}
-                  onPressIn={() => startMoving("right", "up")}
-                  onPressOut={stopMoving}
-                >
-                  <AntDesign name="arrowup" size={24} color="white" />
-                </TouchableOpacity>
-                <View style={styles.dpadRow}>
-                  <TouchableOpacity
-                    style={styles.dpadButton}
-                    onPressIn={() => startMoving("right", "left")}
-                    onPressOut={stopMoving}
-                  >
-                    <AntDesign name="arrowleft" size={24} color="white" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.dpadButton}
-                    onPressIn={() => startMoving("right", "right")}
-                    onPressOut={stopMoving}
-                  >
-                    <AntDesign name="arrowright" size={24} color="white" />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={styles.dpadButton}
-                  onPressIn={() => startMoving("right", "down")}
-                  onPressOut={stopMoving}
-                >
-                  <AntDesign name="arrowdown" size={24} color="white" />
-                </TouchableOpacity>
-              </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: -20,
+                marginLeft: "auto",
+              }}
+            >
+              <KText>{batteryPercentage}%</KText>
+              <MaterialIcons
+                name={getBatteryIcon(batteryPercentage)}
+                size={24}
+                color="white"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: 2,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,
+                }}
+              />
             </View>
+          </View>
+          <View style={styles.dpadGroup}>
+            {console.log("Rendering Joysticks")}
+            <JoystickLeft onMove={handleLeftMove} />
+            <JoystickRight onMove={handleRightMove} />
           </View>
           {showPlayer && (
             <View style={styles.videoContainer}>
               {console.log("Rendering StreamingViewJava")}
               <StreamingViewJava
                 ref={streamingViewRef}
-                style={{ width: "100%", height: 350 }}
+                style={{ width: 600, height: 350 }}
               />
             </View>
           )}
@@ -398,7 +529,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F110E",
     alignItems: "center",
     justifyContent: "center",
-    padding: 20,
   },
   videoContainer: {
     flex: 1,
@@ -412,23 +542,16 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   buttonContainer: {
-    width: 200,
-    height: 50,
+    width: 50,
+    height: 30,
     borderRadius: 30,
     backgroundColor: "#4B8E4B",
     justifyContent: "center",
     alignItems: "center",
     margin: 10,
+    marginTop: -20,
   },
-  emergencyContainer: {
-    width: 70,
-    height: 50,
-    borderRadius: 30,
-    backgroundColor: "#bf0615",
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 10,
-  },
+
   connectButton: {
     width: 200,
     height: 70,
@@ -437,7 +560,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
-    bottom: 40,
+    margin: 20,
   },
   connectButtonText: {
     color: "white",
@@ -457,23 +580,26 @@ const styles = StyleSheet.create({
   },
   greyContainer: {
     width: screenWidth * 0.9,
-    height: 200,
+    height: 310,
     backgroundColor: "#242424",
     borderRadius: 30,
-    justifyContent: "center",
     padding: 35,
   },
   buttonGroup: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 20,
     paddingHorizontal: 0,
+    top: -40,
+    marginLeft: 0,
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    width: 580,
   },
   dpadGroup: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 0,
-    marginTop: 20,
+    bottom: -30,
+    width: 580,
   },
   dpad: {
     alignItems: "center",
@@ -503,5 +629,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#4B8E4B",
     borderRadius: 10,
   },
-  
 });

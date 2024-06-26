@@ -9,6 +9,11 @@ export function StreamingProvider({ children }) {
     setIsStreaming(true);
   };
 
+  const stopStreaming = () => {
+    setIsStreaming(false);
+  };
+
+
   useEffect(() => {
     return () => {
       setIsStreaming(false);
@@ -17,7 +22,7 @@ export function StreamingProvider({ children }) {
   }, []);
 
   return (
-    <StreamingContext.Provider value={{ isStreaming, connectAndStartStreaming }}>
+    <StreamingContext.Provider value={{ isStreaming, connectAndStartStreaming, stopStreaming }}>
       {children}
     </StreamingContext.Provider>
   );
