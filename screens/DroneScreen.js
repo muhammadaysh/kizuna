@@ -371,7 +371,7 @@ export default function DroneScreen({ navigation, route }) {
                   <KText
                     style={{
                       textAlign: "left",
-                      marginTop: -6,
+                      marginTop: -8,
                       fontSize: 15,
                     }}
                   >
@@ -382,7 +382,7 @@ export default function DroneScreen({ navigation, route }) {
                   <KText
                     style={{
                       textAlign: "left",
-                      marginTop: -6,
+                      marginTop: -8,
                       fontSize: 15,
                     }}
                   >
@@ -395,14 +395,14 @@ export default function DroneScreen({ navigation, route }) {
                         color: "lightblue",
                       }}
                     >
-                      {"TELLO-XXXX"}
+                      {"TELLO-XXX"}
                     </Text>
                     {language === "english" ? " via Wi-Fi" : " Wi-Fi経由で"}
                   </KText>
                   <KText
                     style={{
                       textAlign: "left",
-                      marginTop: -6,
+                      marginTop: -8,
                       fontSize: 15,
                     }}
                   >
@@ -413,7 +413,7 @@ export default function DroneScreen({ navigation, route }) {
                   <KText
                     style={{
                       textAlign: "left",
-                      marginTop: -6,
+                      marginTop: -8,
                       fontSize: 15,
                     }}
                   >

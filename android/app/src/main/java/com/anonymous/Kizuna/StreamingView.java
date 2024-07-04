@@ -13,37 +13,38 @@ public class StreamingView extends FrameLayout {
     private TelloStreamModule telloStreamModule;
     private static final String TAG = "StreamingView";
 
-    public StreamingView(Context context) {
-        super(context);
-        this.telloStreamModule = telloStreamModule;
-        surfaceView = new SurfaceView(context);
-        surfaceHolder = surfaceView.getHolder();
-        Log.d(TAG, "SurfaceView created");
-        addView(surfaceView);
+    public StreamingView(Context context, TelloStreamModule telloStreamModule) {
+    super(context);
+    this.telloStreamModule = telloStreamModule; 
+    surfaceView = new SurfaceView(context);
+    surfaceHolder = surfaceView.getHolder();
+    Log.d(TAG, "SurfaceView created");
+    addView(surfaceView);
 
-        surfaceHolder.addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                Log.d(TAG, "Surface created in StreamingView");
-                // Notify the module or start streaming here if needed
-                if (surfaceCreatedListener != null) {
-                    surfaceCreatedListener.onSurfaceCreated(holder);
-                }
+    surfaceHolder.addCallback(new SurfaceHolder.Callback() {
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            Log.d(TAG, "Surface created in StreamingView");
+            if (surfaceCreatedListener != null) {
+                surfaceCreatedListener.onSurfaceCreated(holder);
             }
+        }
 
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.d(TAG, "Surface changed in StreamingView: format=" + format + ", width=" + width + ", height=" + height);
-            }
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            Log.d(TAG, "Surface changed in StreamingView: format=" + format + ", width=" + width + ", height=" + height);
+        }
 
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                Log.d(TAG, "Surface destroyed in StreamingView");
-                if (telloStreamModule != null) {
-                        telloStreamModule.stopStream();
-                    }            
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            Log.d(TAG, "Surface destroyed in StreamingView");
+            if (telloStreamModule != null) {
+                telloStreamModule.stopStream();
+            } else {
+                Log.d(TAG, "TelloStreamModule is null");
             }
-        });
+        }
+    });
     }
 
     public SurfaceView getSurfaceView() {

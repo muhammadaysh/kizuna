@@ -5,6 +5,7 @@ import android.view.SurfaceView;
 import android.view.SurfaceHolder;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.anonymous.Kizuna.UDPReceiver;
 import com.anonymous.Kizuna.H264Decoder;
@@ -27,10 +28,19 @@ public class TelloStreamModule extends ReactContextBaseJavaModule {
     private Thread streamThread;
     private static final String TAG = "TelloStreamModule";
     private int streamingViewId;
+    private static TelloStreamModule instance = null;
+
 
     public TelloStreamModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
+    }
+
+    public static synchronized TelloStreamModule getInstance(ThemedReactContext context) {
+        if (instance == null) {
+            instance = new TelloStreamModule(context);
+        }
+        return instance;
     }
 
     @Override
