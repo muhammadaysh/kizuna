@@ -3,16 +3,18 @@ import { View, Animated } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "react-native-vector-icons";
 import HomeScreen from "../screens/HomeScreen";
-import MonitoringScreen from "../screens/MonitoringScreen";
+import TaskScreen from "../screens/TaskScreen";
+import TaskDetailScreen from "../screens/TaskDetailScreen";
 import WateringScreen from "../screens/WateringScreen";
 import DroneScreen from "../screens/DroneScreen";
 import { StreamingContext } from "./StreamingContext";
+
 
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigation({ route }) {
   const [homeAnimation, setHomeAnimation] = useState(new Animated.Value(0));
-  const [monitoringAnimation, setMonitoringAnimation] = useState(
+  const [taskAnimation, setTaskAnimation] = useState(
     new Animated.Value(0)
   );
   const [wateringAnimation, setWateringAnimation] = useState(
@@ -80,9 +82,9 @@ export default function TabNavigation({ route }) {
                 if (route.name === "Home") {
                   iconName = "home";
                   animation = homeAnimation;
-                } else if (route.name === "Monitoring") {
-                  iconName = "monitor";
-                  animation = monitoringAnimation;
+                } else if (route.name === "Task") {
+                  iconName = "calendar";
+                  animation = taskAnimation;
                 } else if (route.name === "Watering") {
                   iconName = "watering-can";
                   animation = wateringAnimation;
@@ -166,8 +168,8 @@ export default function TabNavigation({ route }) {
               options={{ headerShown: false }}
             />
             <Tab.Screen
-              name="Monitoring"
-              component={MonitoringScreen}
+              name="Task"
+              component={TaskScreen}
               options={{ headerShown: false }}
             />
             <Tab.Screen
@@ -181,6 +183,12 @@ export default function TabNavigation({ route }) {
               options={{ headerShown: false }}
               initialParams={{ isStreaming: false }}
             />
+             {/* <Tab.Screen
+              name="TaskDetail"
+              component={TaskDetailScreen}
+              options={{ headerShown: false }}
+              initialParams={{ isStreaming: false }}
+            /> */}
           </Tab.Navigator>
         </>
       )}

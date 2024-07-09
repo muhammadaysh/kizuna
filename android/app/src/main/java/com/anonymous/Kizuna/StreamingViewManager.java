@@ -15,7 +15,6 @@ public class StreamingViewManager extends SimpleViewManager<StreamingView> {
 
     @Override
     protected StreamingView createViewInstance(ThemedReactContext reactContext) {
-    TelloStreamModule telloStreamModule = TelloStreamModule.getInstance(reactContext);
-    return new StreamingView(reactContext, telloStreamModule);
+        return new StreamingView(reactContext);
     }
 }

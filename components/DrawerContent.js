@@ -33,10 +33,10 @@ export default function DrawerContent(props) {
         onPress={() => props.navigation.navigate("Home")}
       />
       <CustomDrawerItem
-        label="Monitoring"
+        label="Task"
         iconName="monitor"
         labelStyle={{ color: "#FFFFFF" }}
-        onPress={() => props.navigation.navigate("Monitoring")}
+        onPress={() => props.navigation.navigate("Task")}
       />
       <CustomDrawerItem
         label="Watering"

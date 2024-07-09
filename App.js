@@ -17,9 +17,10 @@ import { BottomNavigation } from "react-native-paper";
 import { Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import HomeScreen from "./screens/HomeScreen";
-import MonitoringScreen from "./screens/MonitoringScreen";
+import TaskScreen from "./screens/TaskScreen";
 import WateringScreen from "./screens/WateringScreen";
 import DroneScreen from "./screens/DroneScreen";
+import TaskDetailScreen from "./screens/TaskDetailScreen";
 import KText from "./components/KText";
 import {
   StreamingContext,
@@ -32,16 +33,19 @@ import Orientation from "react-native-orientation-locker";
 import * as MediaLibrary from "expo-media-library";
 
 const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator();
 
 const CustomHeader = ({ route }) => {
   const getHeaderContent = (route) => {
+    if (!route || !getFocusedRouteNameFromRoute) return null;
+
     const routeName = getFocusedRouteNameFromRoute(route) ?? "Home";
 
     switch (routeName) {
-      case "Monitoring":
+      case "Task":
         return (
           <KText style={{ fontWeight: "bold", fontSize: 20, margin: 10 }}>
-            Monitoring
+            Task
           </KText>
         );
       case "Watering":
@@ -60,6 +64,8 @@ const CustomHeader = ({ route }) => {
         return null;
     }
   };
+
+  if (!route) return null;
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -101,41 +107,55 @@ function AppContent() {
     <>
       <StatusBar style="light" />
       <NavigationContainer>
-        {isStreaming ? (
-          <DroneScreen />
-        ) : (
-          <Drawer.Navigator
-            drawerContent={(props) => <DrawerContent {...props} />}
-            drawerType="slide"
-            overlayColor="transparent"
-            sceneContainerStyle={{ backgroundColor: "transparent" }}
-            drawerContentContainerStyle={{ flex: 1 }}
-            screenOptions={({ route }) => ({
-              headerTitle: "",
-              headerStyle: {
-                backgroundColor: "#0F110E",
-              },
-              headerLeft: () => !isStreaming && <KebabMenu />,
-              headerRight: () => !isStreaming && <CustomHeader route={route} />,
-              drawerPosition: "left",
-              activeBackgroundColor: "transparent",
-              inactiveBackgroundColor: "transparent",
-              drawerStyle: {
-                borderRadius: 30,
-                width: 200,
-                backgroundColor: "#212822",
-              },
-              headerShadowVisible: false,
-              // gestureEnabled: !isStreaming,
-            })}
-          >
-            <Drawer.Screen name="Menu" component={TabNavigation} />
-          </Drawer.Navigator>
-        )}
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {isStreaming ? (
+            <Stack.Screen name="Drone" component={DroneScreen} />
+          ) : (
+            <>
+              <Stack.Screen name="Drawer" component={DrawerNavigator} />
+              <Stack.Screen name="TaskDetail" component={TaskDetailScreen} />
+            </>
+          )}
+        </Stack.Navigator>
       </NavigationContainer>
     </>
   );
 }
+
+function DrawerNavigator() {
+  const { isStreaming } = useContext(StreamingContext);
+  
+
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <DrawerContent {...props} />}
+      drawerType="slide"
+      overlayColor="transparent"
+      sceneContainerStyle={{ backgroundColor: "transparent" }}
+      drawerContentContainerStyle={{ flex: 1 }}
+      screenOptions={{
+        headerTitle: "",
+        headerStyle: {
+          backgroundColor: "#0F110E",
+        },
+        headerLeft: () => !isStreaming && <KebabMenu />,
+        headerRight: () => !isStreaming && <CustomHeader />,
+        drawerPosition: "left",
+        activeBackgroundColor: "transparent",
+        inactiveBackgroundColor: "transparent",
+        drawerStyle: {
+          borderRadius: 30,
+          width: 200,
+          backgroundColor: "#212822",
+        },
+        headerShadowVisible: false,
+      }}
+    >
+      <Drawer.Screen name="Menu" component={TabNavigation} />
+    </Drawer.Navigator>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
