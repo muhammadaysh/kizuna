@@ -31,9 +31,21 @@ import DrawerContent from "./components/DrawerContent";
 import TabNavigation from "./components/TabNavigation";
 import Orientation from "react-native-orientation-locker";
 import * as MediaLibrary from "expo-media-library";
+import notifee, { EventType } from "@notifee/react-native";
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
+
+notifee.onBackgroundEvent(async (event) => {
+  switch (event.type) {
+    case EventType.DISMISSED:
+      console.log("User dismissed notification", event.notification);
+      break;
+    case EventType.PRESS:
+      console.log("User pressed notification", event.notification);
+      break;
+  }
+});
 
 const CustomHeader = ({ route }) => {
   const getHeaderContent = (route) => {
@@ -42,22 +54,31 @@ const CustomHeader = ({ route }) => {
     const routeName = getFocusedRouteNameFromRoute(route) ?? "Home";
 
     switch (routeName) {
+      
       case "Task":
         return (
-          <KText style={{ fontWeight: "bold", fontSize: 20, margin: 10 }}>
-            Task
+          <KText
+            style={{
+              fontWeight: "bold",
+              fontSize: 20,
+              margin: 10,
+              paddingTop: 20,
+            }}
+          >
+            Task Reminder
           </KText>
         );
-      case "Watering":
-        return (
-          <KText style={{ fontWeight: "bold", fontSize: 20, margin: 10 }}>
-            Watering
-          </KText>
-        );
+      // case "Watering":
+      //   return (
+      //     <KText style={{ fontWeight: "bold", fontSize: 20, margin: 10 }}>
+      //       Watering
+      //     </KText>
+      //   );
       case "Drone":
         return (
-          <KText style={{ fontWeight: "bold", fontSize: 20, margin: 10 }}>
-            Drone
+          <KText style={{ fontWeight: "bold", fontSize: 20, margin: 10,              paddingTop: 20,
+          }}>
+            Drone Control
           </KText>
         );
       default:
@@ -68,7 +89,14 @@ const CustomHeader = ({ route }) => {
   if (!route) return null;
 
   return (
-    <View style={{ flexDirection: "row", alignItems: "center" }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#0F110E",
+        paddingTop: 20,
+      }}
+    >
       {getHeaderContent(route)}
     </View>
   );
@@ -105,14 +133,22 @@ function AppContent() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator
+          screenOptions={({ route }) => ({
+            headerShown: true,
+            header: () => <CustomHeader route={route} />,
+            headerStyle: {
+              backgroundColor: "#0F110E",
+            },
+          })}
+        >
           {isStreaming ? (
             <Stack.Screen name="Drone" component={DroneScreen} />
           ) : (
             <>
-              <Stack.Screen name="Drawer" component={DrawerNavigator} />
+              <Stack.Screen name="Menu" component={TabNavigation} />
               <Stack.Screen name="TaskDetail" component={TaskDetailScreen} />
             </>
           )}
@@ -124,7 +160,6 @@ function AppContent() {
 
 function DrawerNavigator() {
   const { isStreaming } = useContext(StreamingContext);
-  
 
   return (
     <Drawer.Navigator

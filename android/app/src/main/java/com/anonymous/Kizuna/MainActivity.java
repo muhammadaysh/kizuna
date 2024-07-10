@@ -2,12 +2,11 @@ package com.anonymous.Kizuna;
 
 import android.os.Build;
 import android.os.Bundle;
-
+import androidx.appcompat.app.AppCompatDelegate; 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactActivityDelegate;
-
 import expo.modules.ReactActivityDelegateWrapper;
 
 public class MainActivity extends ReactActivity {

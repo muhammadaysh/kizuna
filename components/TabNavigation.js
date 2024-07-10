@@ -83,11 +83,11 @@ export default function TabNavigation({ route }) {
                   iconName = "home";
                   animation = homeAnimation;
                 } else if (route.name === "Task") {
-                  iconName = "calendar";
+                  iconName = "bell";
                   animation = taskAnimation;
-                } else if (route.name === "Watering") {
-                  iconName = "watering-can";
-                  animation = wateringAnimation;
+                // } else if (route.name === "Watering") {
+                //   iconName = "watering-can";
+                //   animation = wateringAnimation;
                 } else if (route.name === "Drone") {
                   iconName = "drone";
                   animation = droneAnimation;
@@ -172,11 +172,11 @@ export default function TabNavigation({ route }) {
               component={TaskScreen}
               options={{ headerShown: false }}
             />
-            <Tab.Screen
+            {/* <Tab.Screen
               name="Watering"
               component={WateringScreen}
               options={{ headerShown: false }}
-            />
+            /> */}
             <Tab.Screen
               name="Drone"
               component={DroneScreen}

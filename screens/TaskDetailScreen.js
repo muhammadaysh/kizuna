@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   TextInput,
@@ -7,12 +7,22 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   ScrollView,
+  ToastAndroid,
+  Animated,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import KText from "../components/KText";
+import notifee, { TimestampTrigger, TriggerType } from "@notifee/react-native";
+import Icon from "react-native-vector-icons/FontAwesome5";
 
 const screenWidth = Dimensions.get("window").width;
+
+const availableIcons = [
+  { name: "water", icon: "tint", color: "#3498db" },
+  { name: "sun", icon: "sun", color: "#f1c40f" },
+  { name: "plant", icon: "seedling", color: "#2ecc71" },
+];
 
 export default function TaskDetailScreen({ route, navigation }) {
   const [title, setTitle] = useState("");
@@ -20,9 +30,14 @@ export default function TaskDetailScreen({ route, navigation }) {
   const [time, setTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedIconName, setSelectedIconName] = useState(
+    availableIcons[0].name
+  );
   const { task } = route.params || {};
 
   useEffect(() => {
+    createNotificationChannel();
+
     if (task) {
       setTitle(task.title);
       const taskTime = new Date(task.time);
@@ -31,7 +46,82 @@ export default function TaskDetailScreen({ route, navigation }) {
     }
   }, [task]);
 
+  const scaleAnim = useRef(
+    availableIcons.reduce((acc, item) => {
+      acc[item.name] = new Animated.Value(1);
+      1;
+      return acc;
+    }, {})
+  ).current;
+
+  useEffect(() => {
+    Animated.spring(scaleAnim[selectedIconName], {
+      toValue: 1.2,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
+
+    Object.keys(scaleAnim).forEach((key) => {
+      if (key !== selectedIconName) {
+        scaleAnim[key].setValue(1);
+      }
+    });
+  }, [selectedIconName, scaleAnim]);
+
+  const createNotificationChannel = async () => {
+    await notifee.createChannel({
+      id: "default",
+      name: "Default Channel",
+      sound: "default",
+    });
+  };
+
+  const renderIconPicker = () => (
+    <View style={styles.iconPickerContainer}>
+      {availableIcons.map((item) => (
+        <Animated.View
+          key={item.name}
+          style={{
+            width: 50,
+            height: 50,
+            transform: [{ scale: scaleAnim[item.name] }],
+            borderRadius: 25,
+            backgroundColor:
+              selectedIconName === item.name ? "#505050" : "transparent",
+            padding: 10,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <TouchableOpacity onPress={() => setSelectedIconName(item.name)}>
+            <Icon name={item.icon} size={20} color={item.color} />
+          </TouchableOpacity>
+        </Animated.View>
+      ))}
+    </View>
+  );
+
+  const canSaveTask = () => {
+    const now = new Date();
+    const selectedDateTime = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      time.getHours(),
+      time.getMinutes()
+    );
+
+    return title.trim() !== "" && selectedDateTime > now;
+  };
+
   const saveTask = async () => {
+    if (!canSaveTask()) {
+      ToastAndroid.show(
+        "Please fill all fields and ensure the date is in the future.",
+        ToastAndroid.LONG
+      );
+      return;
+    }
     const newTask = {
       id: task ? task.id : Date.now(),
       title,
@@ -42,6 +132,7 @@ export default function TaskDetailScreen({ route, navigation }) {
         time.getHours(),
         time.getMinutes()
       ),
+      iconName: selectedIconName,
     };
     const storedTasks = await AsyncStorage.getItem("tasks");
     const tasks = storedTasks ? JSON.parse(storedTasks) : [];
@@ -52,6 +143,31 @@ export default function TaskDetailScreen({ route, navigation }) {
       tasks.push(newTask);
     }
     await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
+
+    const trigger = {
+      type: TriggerType.TIMESTAMP,
+      timestamp: newTask.time.getTime(),
+    };
+
+    try {
+      await notifee.createTriggerNotification(
+        {
+          id: String(newTask.id),
+          title: "Task Reminder",
+          body: `${newTask.title}`,
+          android: {
+            channelId: "default",
+            showTimestamp: true,
+          },
+        },
+        trigger
+      );
+      console.log("Notification successfully created for task:", newTask.title);
+      ToastAndroid.show("Task created.", ToastAndroid.SHORT);
+    } catch (error) {
+      console.error("Failed to create notification:", error);
+    }
+
     navigation.goBack();
   };
 
@@ -70,19 +186,31 @@ export default function TaskDetailScreen({ route, navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
       <View style={styles.headerContainer}>
         <KText style={styles.taskHeader}>Create Task</KText>
       </View>
       <KeyboardAvoidingView>
         <View style={styles.greyContainer}>
           <KText style={styles.label}>Task Title</KText>
-          <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+          />
         </View>
         <View style={styles.greyContainer}>
           <KText style={styles.label}>Select Date</KText>
-          <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)}>
-            <KText style={styles.dateTimeButtonText}>{date.toDateString()}</KText>
+          <TouchableOpacity
+            style={styles.dateTimeButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <KText style={styles.dateTimeButtonText}>
+              {date.toDateString()}
+            </KText>
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -93,9 +221,15 @@ export default function TaskDetailScreen({ route, navigation }) {
             />
           )}
           <KText style={styles.label}>Select Time</KText>
-          <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimePicker(true)}>
+          <TouchableOpacity
+            style={styles.dateTimeButton}
+            onPress={() => setShowTimePicker(true)}
+          >
             <KText style={styles.dateTimeButtonText}>
-              {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {time.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </KText>
           </TouchableOpacity>
           {showTimePicker && (
@@ -107,7 +241,15 @@ export default function TaskDetailScreen({ route, navigation }) {
             />
           )}
         </View>
-        <TouchableOpacity style={styles.addTaskButton} onPress={saveTask}>
+        <View style={styles.greyContainer}>
+          <KText style={styles.label}>Pick Icon</KText>
+          {renderIconPicker()}
+        </View>
+        <TouchableOpacity
+          style={[styles.addTaskButton, !canSaveTask() && { opacity: 0.5 }]}
+          onPress={saveTask}
+          disabled={!canSaveTask()}
+        >
           <KText style={styles.addTaskButtonText}>Save</KText>
         </TouchableOpacity>
       </KeyboardAvoidingView>
@@ -123,6 +265,7 @@ const styles = StyleSheet.create({
     height: "100%",
     position: "relative",
     padding: 20,
+    paddingBottom: 100,
   },
   contentContainer: {
     alignItems: "center",
@@ -166,7 +309,7 @@ const styles = StyleSheet.create({
   },
   greyContainer: {
     width: screenWidth * 0.85,
-    minHeight: 150,
+    minHeight: 120,
     backgroundColor: "#242424",
     borderRadius: 30,
     padding: 30,
@@ -180,10 +323,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
+    marginBottom: 40
   },
   addTaskButtonText: {
     color: "white",
     fontSize: 22,
     fontWeight: "bold",
+  },
+  iconPickerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 10,
   },
 });

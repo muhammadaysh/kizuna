@@ -180,40 +180,40 @@ export default function DroneScreen({ navigation, route }) {
     }
   };
 
-  // useEffect(() => {
-  //   const sendInitialCommand = () => {
-  //     sendCommand("command");
+  useEffect(() => {
+    const sendInitialCommand = () => {
+      sendCommand("command");
 
-  //     const messageListener = (msg, rinfo) => {
-  //       console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+      const messageListener = (msg, rinfo) => {
+        console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-  //       if (msg) {
-  //         sendCommand("speed 30");
-  //         setIsConnected(true);
-  //         // Remove the listener inside the listener itself after it's done its job
-  //         server.current.removeListener("message", messageListener);
-  //         clearInterval(autoConnectInterval);
-  //       }
-  //     };
+        if (msg) {
+          sendCommand("speed 30");
+          setIsConnected(true);
+          // Remove the listener inside the listener itself after it's done its job
+          server.current.removeListener("message", messageListener);
+          clearInterval(autoConnectInterval);
+        }
+      };
 
-  //     // Add the listener
-  //     server.current.on("message", messageListener);
-  //   };
+      // Add the listener
+      server.current.on("message", messageListener);
+    };
 
-  //   const autoConnectInterval = setInterval(() => {
-  //     if (!isConnected) {
-  //       sendInitialCommand();
-  //     } else {
-  //       clearInterval(autoConnectInterval);
-  //     }
-  //   }, 3000);
+    const autoConnectInterval = setInterval(() => {
+      if (!isConnected) {
+        sendInitialCommand();
+      } else {
+        clearInterval(autoConnectInterval);
+      }
+    }, 3000);
 
-  //   return () => {
-  //     clearInterval(autoConnectInterval);
+    return () => {
+      clearInterval(autoConnectInterval);
 
-  //     server.current.removeAllListeners("message");
-  //   };
-  // }, [sendCommand, setIsConnected, setIsLoading, isConnected]);
+      server.current.removeAllListeners("message");
+    };
+  }, [sendCommand, setIsConnected, setIsLoading, isConnected]);
   
   const handleConnectAndStartStreaming = () => {
     if (!isConnected) {
